@@ -57,6 +57,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     color: '#fff',
   },
+  emptyTransactionContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: '10%',
+  },
 });
 
 export default styles;

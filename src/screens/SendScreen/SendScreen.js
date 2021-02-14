@@ -14,6 +14,7 @@ import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import broadcastTransaction from '../../api/bitcoin/broadcastTransaction';
 import '../../../shim';
 import Spinner from '../../Components/Spinner/Spinner';
+import CustomButton from '../../Components/CustomButton/CustomButton';
 const bitcoin = require('bitcoinjs-lib');
 
 export default function SendScreen({route}) {
@@ -71,11 +72,13 @@ export default function SendScreen({route}) {
 
     if (!address) {
       Alert.alert('Enter Testnet Address');
+      setLoading(false);
       return;
     }
 
-    if (amount === 0) {
+    if (!amount) {
       Alert.alert('Enter Amount');
+      setLoading(false);
       return;
     }
 
@@ -99,6 +102,7 @@ export default function SendScreen({route}) {
         }
       } catch (error) {
         console.log('error', error);
+        Alert.alert('ERROR');
       }
     }
 
@@ -134,11 +138,7 @@ export default function SendScreen({route}) {
           </View>
 
           <View style={styles.btnOuterContainer}>
-            <TouchableOpacity activeOpacity={0.7} style={styles.btnContainer}>
-              <Text onPress={handleSendBtn} style={styles.btnText}>
-                SEND
-              </Text>
-            </TouchableOpacity>
+            <CustomButton handleBtnClick={handleSendBtn} />
           </View>
 
           {showErrorMsg && (

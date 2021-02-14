@@ -13,6 +13,7 @@ import TransactionCard from '../../Components/TransactionCard/TransactionCard';
 import styles from './styles';
 import Contexts from '../../Contexts/Contexts';
 import Spinner from '../../Components/Spinner/Spinner';
+import CustomButton from '../../Components/CustomButton/CustomButton';
 
 export default function HomeScreen({navigation}) {
   const [bitcoinData, setBitcoinData] = useState(null);
@@ -23,21 +24,23 @@ export default function HomeScreen({navigation}) {
   useEffect(() => {
     if (bitcoinData) {
       // setting last hash address
-      setLastHash(bitcoinData.address.transactions[0].txid);
+      if (bitcoinData.address.transactions) {
+        setLastHash(bitcoinData.address.transactions[0].txid);
 
-      // setting out in
-      const outputData = [];
-      bitcoinData &&
-        bitcoinData.address.transactions &&
-        bitcoinData.address.transactions.map((transaction, index) => {
-          transaction.outputs.map((output) => {
-            if (output.addresses.includes(storedBitcoinData.address)) {
-              outputData.push(output);
-            }
+        // setting out in
+        const outputData = [];
+        bitcoinData &&
+          bitcoinData.address.transactions &&
+          bitcoinData.address.transactions.map((transaction, index) => {
+            transaction.outputs.map((output) => {
+              if (output.addresses.includes(storedBitcoinData.address)) {
+                outputData.push(output);
+              }
+            });
           });
-        });
 
-      setOutIn(outputData[0].n);
+        setOutIn(outputData[0].n);
+      }
     }
   }, [bitcoinData]);
 
@@ -45,6 +48,7 @@ export default function HomeScreen({navigation}) {
   const getBitcoinData = async (address) => {
     try {
       const data = await getBitcoinDetails(address);
+      console.log('data', data);
       setBitcoinData(data);
     } catch (error) {
       console.log(error);
@@ -85,17 +89,19 @@ export default function HomeScreen({navigation}) {
               </Text>
 
               <View style={styles.btnContainer}>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={styles.btn}
-                  onPress={() =>
+                <CustomButton
+                  handleBtnClick={() =>
                     navigation.navigate('SendScreen', {
                       outIn,
                       lastHash,
                     })
-                  }>
-                  <Text style={styles.btnText}>SEND</Text>
-                </TouchableOpacity>
+                  }
+                  isDisabled={
+                    bitcoinData &&
+                    bitcoinData.address.total.balance === '0' &&
+                    true
+                  }
+                />
               </View>
             </View>
 
@@ -106,6 +112,11 @@ export default function HomeScreen({navigation}) {
                 keyExtractor={(item, index) => item.txid}
                 data={bitcoinData.address.transactions}
                 showsVerticalScrollIndicator={false}
+                ListEmptyComponent={() => (
+                  <View style={styles.emptyTransactionContainer}>
+                    <Text style={{color: '#fff'}}>No Transactions</Text>
+                  </View>
+                )}
                 renderItem={({item}) => {
                   const debitedArray = [];
                   const creditedArray = [];
