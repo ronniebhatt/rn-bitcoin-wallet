@@ -1,12 +1,5 @@
 import React, {useState, useEffect, useContext} from 'react';
-import {
-  View,
-  Text,
-  SafeAreaView,
-  TouchableOpacity,
-  Image,
-  FlatList,
-} from 'react-native';
+import {View, Text, SafeAreaView, Image, FlatList} from 'react-native';
 import '../../../shim';
 import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import TransactionCard from '../../Components/TransactionCard/TransactionCard';
@@ -31,15 +24,14 @@ export default function HomeScreen({navigation}) {
         const outputData = [];
         bitcoinData &&
           bitcoinData.address.transactions &&
-          bitcoinData.address.transactions.map((transaction, index) => {
-            transaction.outputs.map((output) => {
-              if (output.addresses.includes(storedBitcoinData.address)) {
-                outputData.push(output);
-              }
-            });
+          bitcoinData.address.transactions[0].outputs.map((output, index) => {
+            if (output.addresses.includes(storedBitcoinData.address)) {
+              outputData.push(output);
+            }
           });
-
-        setOutIn(outputData[0].n);
+        if (outputData[0]) {
+          setOutIn(outputData[0].n);
+        }
       }
     }
   }, [bitcoinData]);
@@ -48,7 +40,6 @@ export default function HomeScreen({navigation}) {
   const getBitcoinData = async (address) => {
     try {
       const data = await getBitcoinDetails(address);
-      console.log('data', data);
       setBitcoinData(data);
     } catch (error) {
       console.log(error);
@@ -98,7 +89,7 @@ export default function HomeScreen({navigation}) {
                   }
                   isDisabled={
                     bitcoinData &&
-                    bitcoinData.address.total.balance === '0' &&
+                    bitcoinData.address.total.balance_int === 0 &&
                     true
                   }
                 />

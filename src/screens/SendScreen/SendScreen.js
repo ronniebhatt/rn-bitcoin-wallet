@@ -1,13 +1,5 @@
 import React, {useState, useContext} from 'react';
-import {
-  View,
-  Text,
-  SafeAreaView,
-  TextInput,
-  Image,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import {View, Text, SafeAreaView, TextInput, Image, Alert} from 'react-native';
 import styles from './styles';
 import Contexts from '../../Contexts/Contexts';
 import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
