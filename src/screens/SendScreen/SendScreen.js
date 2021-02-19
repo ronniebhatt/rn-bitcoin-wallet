@@ -10,26 +10,28 @@ import CustomButton from '../../Components/CustomButton/CustomButton';
 const bitcoin = require('bitcoinjs-lib');
 
 export default function SendScreen({route}) {
-  const {outIn, lastHash} = route.params;
-  const [address, setAddress] = useState('mxV4SBbCDfwjh5aMjAGn9HGAYW6mhuZLfC');
+  const {outIn, lastHash, bitcoinData} = route.params;
+  const [address, setAddress] = useState('');
   const [amount, setAmount] = useState('');
   const {storedBitcoinData} = useContext(Contexts);
   const [loading, setLoading] = useState(false);
   const [showErrorMsg, setShowErrorMsg] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  console.log('nn', outIn, lastHash, bitcoinData);
+  console.log('storedBitcoinData', storedBitcoinData);
 
   // check if receiver testnet address is valid or not
   const checkTestAddress = async (testnetAddress) => {
     try {
-      const {success, error, address} = await getBitcoinDetails(testnetAddress);
+      const data = await getBitcoinDetails(testnetAddress);
 
-      if (success) {
-        return address;
+      if (data) {
+        return data.address;
       }
 
-      if (!success) {
+      if (!data) {
         setShowErrorMsg(true);
-        setErrorMsg(error.message);
+        setErrorMsg('Invalid Address');
         return false;
       }
     } catch (error) {
@@ -62,17 +64,37 @@ export default function SendScreen({route}) {
     const testnet = bitcoin.networks.testnet;
     setLoading(true);
 
+    // check testnet address is empty
     if (!address) {
       Alert.alert('Enter Testnet Address');
       setLoading(false);
       return;
     }
 
+    // check amount is empty
     if (!amount) {
       Alert.alert('Enter Amount');
       setLoading(false);
       return;
     }
+
+    // check amount is less than bitcoin balance
+    if (amount > bitcoinData.balance) {
+      Alert.alert('Insufficient Balance');
+      setLoading(false);
+      return;
+    }
+
+    // check if unconfirmed
+    bitcoinData.txs.map((transaction, index) => {
+      if (transaction.hash === lastHash) {
+        if (transaction.confirmations === 0) {
+          Alert.alert('Waiting for transaction to confirm');
+          setLoading(false);
+          return;
+        }
+      }
+    });
 
     // validate receiver address
     const data = await checkTestAddress(address);
@@ -83,12 +105,16 @@ export default function SendScreen({route}) {
         const outn = outIn;
         transactionBuilder.addInput(transactionID, outn);
         transactionBuilder.addOutput(address, parseInt(amount));
+        transactionBuilder.addOutput(
+          bitcoinData.address,
+          parseInt(amount) - 1000,
+        );
         const keyPair = bitcoin.ECPair.fromWIF(storedBitcoinData.wif, testnet);
         transactionBuilder.sign(0, keyPair);
 
         const transaction = transactionBuilder.build();
         const transactionHex = transaction.toHex();
-
+        console.log('hex', transactionHex);
         if (transactionHex) {
           broadcastRawTransaction(transactionHex);
         }

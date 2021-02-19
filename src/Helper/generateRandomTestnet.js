@@ -15,6 +15,8 @@ const generateRandomTestnet = () => {
     address,
     privateKey,
     wif,
+    pubkey: keyPair.publicKey,
+    keyPair,
   };
 
   return bitcoinObj;

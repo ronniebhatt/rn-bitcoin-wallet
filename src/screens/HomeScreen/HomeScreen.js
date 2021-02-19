@@ -1,5 +1,12 @@
 import React, {useState, useEffect, useContext} from 'react';
-import {View, Text, SafeAreaView, Image, FlatList} from 'react-native';
+import {
+  View,
+  Text,
+  SafeAreaView,
+  Image,
+  FlatList,
+  RefreshControl,
+} from 'react-native';
 import '../../../shim';
 import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import TransactionCard from '../../Components/TransactionCard/TransactionCard';
@@ -13,24 +20,38 @@ export default function HomeScreen({navigation}) {
   const [outIn, setOutIn] = useState(0);
   const [lastHash, setLastHash] = useState('');
   const {storedBitcoinData} = useContext(Contexts);
+  const [refreshing, setRefreshing] = useState(false);
+
+  let senderAddress = {};
+
+  const onRefresh = () => {
+    if (storedBitcoinData) {
+      setRefreshing(true);
+      console.log('called 2');
+      getBitcoinData(storedBitcoinData.address);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     if (bitcoinData) {
       // setting last hash address
-      if (bitcoinData.address.transactions) {
-        setLastHash(bitcoinData.address.transactions[0].txid);
+      if (bitcoinData.txs.length !== 0) {
+        setLastHash(bitcoinData.txs[0].hash);
 
         // setting out in
         const outputData = [];
+        let currentIndex = 0;
         bitcoinData &&
-          bitcoinData.address.transactions &&
-          bitcoinData.address.transactions[0].outputs.map((output, index) => {
+          bitcoinData.txs &&
+          bitcoinData.txs[0].outputs.map((output, index) => {
             if (output.addresses.includes(storedBitcoinData.address)) {
               outputData.push(output);
+              currentIndex = index;
             }
           });
         if (outputData[0]) {
-          setOutIn(outputData[0].n);
+          setOutIn(currentIndex);
         }
       }
     }
@@ -40,6 +61,7 @@ export default function HomeScreen({navigation}) {
   const getBitcoinData = async (address) => {
     try {
       const data = await getBitcoinDetails(address);
+      console.log('new bit', data);
       setBitcoinData(data);
     } catch (error) {
       console.log(error);
@@ -49,6 +71,8 @@ export default function HomeScreen({navigation}) {
   // initial load
   useEffect(() => {
     if (storedBitcoinData) {
+      console.log('called 2');
+
       getBitcoinData(storedBitcoinData.address);
     }
   }, [storedBitcoinData]);
@@ -71,7 +95,7 @@ export default function HomeScreen({navigation}) {
 
               {/* CURRENT BALANCE */}
               <Text style={styles.balanceText}>
-                Balance {bitcoinData && bitcoinData.address.total.balance}
+                Balance {bitcoinData && bitcoinData.balance}
               </Text>
 
               {/* CURRENT TESTNET ADDRESS */}
@@ -85,12 +109,8 @@ export default function HomeScreen({navigation}) {
                     navigation.navigate('SendScreen', {
                       outIn,
                       lastHash,
+                      bitcoinData,
                     })
-                  }
-                  isDisabled={
-                    bitcoinData &&
-                    bitcoinData.address.total.balance_int === 0 &&
-                    true
                   }
                 />
               </View>
@@ -100,8 +120,14 @@ export default function HomeScreen({navigation}) {
             <View style={styles.bottomContainer}>
               <Text style={styles.transactionText}>Transactions</Text>
               <FlatList
-                keyExtractor={(item, index) => item.txid}
-                data={bitcoinData.address.transactions}
+                keyExtractor={(item, index) => index.toString()}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                  />
+                }
+                data={bitcoinData.txs}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={() => (
                   <View style={styles.emptyTransactionContainer}>
@@ -125,6 +151,13 @@ export default function HomeScreen({navigation}) {
                       creditedArray.push(output);
                     }
                   });
+
+                  // setting sender transaction to creditedArray
+                  item.outputs.map((output) => {
+                    if (!output.addresses.includes(storedBitcoinData.address)) {
+                      senderAddress[item.hash] = output;
+                    }
+                  });
                   return (
                     <>
                       {/* rendering credited transaction */}
@@ -132,8 +165,8 @@ export default function HomeScreen({navigation}) {
                         return (
                           <TransactionCard
                             key={index}
-                            transactionID={item.txid}
-                            amount={credit.value_int}
+                            transactionID={item.hash}
+                            amount={credit.value}
                             isCredited={true}
                           />
                         );
@@ -141,11 +174,18 @@ export default function HomeScreen({navigation}) {
 
                       {/* rendering debited transaction */}
                       {debitedArray.map((debit, index) => {
+                        let totalDeducted = 0;
+                        if (senderAddress[item.hash]) {
+                          totalDeducted = senderAddress[item.hash].value + 1000;
+                        } else {
+                          totalDeducted = debit.output_value;
+                        }
+
                         return (
                           <TransactionCard
                             key={index}
-                            transactionID={item.txid}
-                            amount={debit.value_int}
+                            transactionID={item.hash}
+                            amount={totalDeducted}
                             isCredited={false}
                           />
                         );
