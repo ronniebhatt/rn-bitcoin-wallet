@@ -4,6 +4,7 @@ import Contexts from './Contexts';
 const AppStorage = ({children}) => {
   const [storedBitcoinData, setStoredBitcoinData] = useState(null);
   const [globalSpinner, setGlobalSpinner] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleGlobalSpinner = (data) => {
     setGlobalSpinner(data);
@@ -14,6 +15,8 @@ const AppStorage = ({children}) => {
     setStoredBitcoinData,
     handleGlobalSpinner,
     globalSpinner,
+    setIsLoggedIn,
+    isLoggedIn,
   };
 
   return (

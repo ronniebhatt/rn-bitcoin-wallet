@@ -12,7 +12,7 @@ import ReceiveScreen from './src/screens/ReceiveScreen/ReceiveScreen';
 const Stack = createStackNavigator();
 
 export default function App() {
-  const {handleGlobalSpinner, globalSpinner} = useContext(Contexts);
+  const {handleGlobalSpinner, globalSpinner, isLoggedIn} = useContext(Contexts);
 
   const renderGlobalLoader = () => (
     <Modal
@@ -46,17 +46,24 @@ export default function App() {
       </View>
     </Modal>
   );
+
+  const loadLoginNavigator = () => (
+    <Stack.Screen name="Login" component={LoginScreen} />
+  );
+
+  const loadLoggedInNavigator = () => (
+    <>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="SendScreen" component={SendScreen} />
+      <Stack.Screen name="ReceiveScreen" component={ReceiveScreen} />
+    </>
+  );
   return (
     <>
       {renderGlobalLoader()}
       <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName="Home"
-          screenOptions={{headerShown: false}}>
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="SendScreen" component={SendScreen} />
-          <Stack.Screen name="ReceiveScreen" component={ReceiveScreen} />
+        <Stack.Navigator screenOptions={{headerShown: false}}>
+          {isLoggedIn ? loadLoggedInNavigator() : loadLoginNavigator()}
         </Stack.Navigator>
       </NavigationContainer>
     </>

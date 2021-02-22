@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useContext} from 'react';
+import React, {useState, useContext} from 'react';
 import {View, Text, SafeAreaView, Image, TextInput} from 'react-native';
 import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import Contexts from '../../Contexts/Contexts';
@@ -13,7 +13,9 @@ const bip39 = require('bip39');
 
 export default function LoginScreen({navigation}) {
   const [currentNo, setCurrentNo] = useState(10);
-  const {setStoredBitcoinData, handleGlobalSpinner} = useContext(Contexts);
+  const {setStoredBitcoinData, handleGlobalSpinner, setIsLoggedIn} = useContext(
+    Contexts,
+  );
   const arr = [];
 
   const generateRandomAndStoreData = async (data) => {
@@ -21,7 +23,7 @@ export default function LoginScreen({navigation}) {
       const jsonValue = JSON.stringify(data);
       await AsyncStorage.setItem('bitcoin', jsonValue);
       setStoredBitcoinData(data);
-      navigation.navigate('Home');
+      setIsLoggedIn(true);
       handleGlobalSpinner(false);
     } catch (e) {
       console.log(e);
