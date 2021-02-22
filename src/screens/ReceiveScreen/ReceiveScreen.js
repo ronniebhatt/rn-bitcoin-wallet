@@ -9,7 +9,7 @@ export default function ReceiveScreen({route}) {
 
   const handleCopyBtn = () => {
     Clipboard.setString(bitcoinData.address);
-    ToastAndroid.show('Link Copied', ToastAndroid.SHORT);
+    ToastAndroid.show('Testnet Address Copied', ToastAndroid.SHORT);
   };
 
   return (

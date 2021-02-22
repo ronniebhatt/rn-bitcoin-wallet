@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useState, useEffect, useContext, useRef} from 'react';
 import {
   View,
   Text,
@@ -13,22 +13,24 @@ import styles from './styles';
 import Contexts from '../../Contexts/Contexts';
 import Spinner from '../../Components/Spinner/Spinner';
 import CustomButton from '../../Components/CustomButton/CustomButton';
-const bitcoin = require('bitcoinjs-lib');
-const bip39 = require('bip39');
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {LOGO_URL} from '../../api/constant';
+import generateTestnetAddressAndPrivateKey from '../../Helper/generateTestnetAddress';
 
 export default function HomeScreen({navigation}) {
   const [bitcoinData, setBitcoinData] = useState(null);
   const [outIn, setOutIn] = useState(0);
   const [lastHash, setLastHash] = useState('');
-  const {storedBitcoinData, setStoredBitcoinData} = useContext(Contexts);
+  const {
+    storedBitcoinData,
+    setStoredBitcoinData,
+    handleGlobalSpinner,
+  } = useContext(Contexts);
   const [refreshing, setRefreshing] = useState(false);
-  const [currentNo, setCurrentNo] = useState(23);
-  let arr = [];
+  const ref = useRef({currentNo: 10});
 
   let senderAddress = {};
 
+  // handle pull to refresh
   const onRefresh = () => {
     if (storedBitcoinData) {
       setRefreshing(true);
@@ -37,124 +39,65 @@ export default function HomeScreen({navigation}) {
     }
   };
 
-  function getAddress(node) {
-    return {
-      address: bitcoin.payments.p2pkh({
-        pubkey: node.publicKey,
-        network: bitcoin.networks.testnet,
-      }).address,
-      privateKey: node.toWIF(),
-    };
-  }
+  // useEffect(() => {
+  //   if (bitcoinData) {
+  //     console.log('bitcoinData', bitcoinData);
+  //     // setting last hash address
+  //     if (bitcoinData.txs.length !== 0) {
+  //       setLastHash(bitcoinData.txs[0].hash);
+  //       // setting out in
+  //       const outputData = [];
+  //       let currentIndex = 0;
+  //       bitcoinData &&
+  //         bitcoinData.txs &&
+  //         bitcoinData.txs[0].outputs.map((output, index) => {
+  //           if (output.addresses.includes(storedBitcoinData.address)) {
+  //             outputData.push(output);
+  //             currentIndex = index;
+  //           }
+  //         });
+  //       if (outputData[0]) {
+  //         setOutIn(currentIndex);
+  //       }
+  //     }
+  //   }
+  // }, [bitcoinData]);
 
-  const generateRandomAndStoreData = async (data) => {
-    try {
-      const jsonValue = JSON.stringify(data);
-      await AsyncStorage.setItem('bitcoin', jsonValue);
-      setStoredBitcoinData(data);
-    } catch (e) {
-      console.log(e);
+  // validate new address
+  const validateAddress = async () => {
+    handleGlobalSpinner(true);
+    const isUnused = await generateUnusedAddress();
+    if (!isUnused) {
+      const currentIndex = ref.current.currentNo + 10;
+      ref.current.currentNo = currentIndex;
+      validateAddress();
     }
   };
 
-  const generate = async () => {
-    const seed = bip39.mnemonicToSeedSync(
-      'relief ask nest obvious analyst useful champion spell fly letter simple senior',
+  const generateUnusedAddress = async () => {
+    const data = await generateTestnetAddressAndPrivateKey(
+      ref.current.currentNo,
     );
-    console.log('seed', seed);
-    const root = bitcoin.bip32.fromSeed(seed, bitcoin.networks.testnet);
-    console.log('root', root);
-    // const branch = root.deriveHardened(0).derive(0).derive(0);
-    const branch = root
-      .deriveHardened(44)
-      .deriveHardened(1)
-      .deriveHardened(0)
-      .derive(0);
-
-    for (let i = 0; i < currentNo; ++i) {
-      arr.push(getAddress(branch.derive(i)));
-    }
-    console.log(arr);
-    const lastArray = arr.slice(-1).pop();
-    console.log('here11', lastArray.address);
-    const data = await getBitcoinDatatwo(lastArray.address);
-    console.log('data', data);
-    if (data.txs.length === 0) {
-      console.log('unused', lastArray.address);
-      generateRandomAndStoreData({
-        address: lastArray.address,
-        privateKey: lastArray.privateKey,
-      });
+    if (data) {
+      setStoredBitcoinData(data);
+      handleGlobalSpinner(false);
       return true;
-    } else {
-      console.log('used', lastArray.address);
+    }
+    if (!data) {
       return false;
     }
   };
-
-  useEffect(() => {
-    if (bitcoinData) {
-      console.log('bitcoinData', bitcoinData);
-      // setting last hash address
-      if (bitcoinData.txs.length !== 0) {
-        setLastHash(bitcoinData.txs[0].hash);
-
-        // setting out in
-        const outputData = [];
-        let currentIndex = 0;
-        bitcoinData &&
-          bitcoinData.txs &&
-          bitcoinData.txs[0].outputs.map((output, index) => {
-            if (output.addresses.includes(storedBitcoinData.address)) {
-              outputData.push(output);
-              currentIndex = index;
-            }
-          });
-        if (outputData[0]) {
-          setOutIn(currentIndex);
-        }
-      }
-    }
-  }, [bitcoinData]);
-
-  const callFun = async () => {
-    const isUnused = await generate();
-    console.log('isUnused', isUnused);
-    if (!isUnused) {
-      setCurrentNo(currentNo + 20);
-      callFun();
-    }
-  };
-
-  // useEffect(() => {
-  // const callFun = async () => {
-  //   const isUnused = await generate();
-  //   console.log('isUnused', isUnused);
-  //   if (!isUnused) {
-  //     setCurrentNo(currentNo + 10);
-  //     generate();
-  //   }
-  // };
-  //   callFun();
-  // }, [currentNo]);
 
   // get bitcoin data by bitcoin address
   const getBitcoinData = async (address) => {
     try {
       const data = await getBitcoinDetails(address);
-      console.log('new bit', data);
       setBitcoinData(data);
       if (data.txs.length !== 0) {
-        callFun();
+        setTimeout(() => {
+          validateAddress();
+        }, 5000);
       }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const getBitcoinDatatwo = async (address) => {
-    try {
-      const data = await getBitcoinDetails(address);
-      setBitcoinData(data);
       return data;
     } catch (error) {
       console.log(error);
@@ -163,35 +106,11 @@ export default function HomeScreen({navigation}) {
 
   // initial load
   useEffect(() => {
-    const calla = async () => {
-      if (storedBitcoinData) {
-        console.log('called 2');
-        getBitcoinDatatwo(storedBitcoinData.address);
-      } else {
-        console.log('here');
-        const asyncData = await getAsyncData();
-        // if data exist already
-        // set data to context
-        if (asyncData) {
-          setStoredBitcoinData(asyncData);
-        }
-      }
-    };
-
-    calla();
+    if (storedBitcoinData) {
+      getBitcoinData(storedBitcoinData.address);
+    }
   }, [storedBitcoinData]);
 
-  // temp
-  // bitcoin data from asyncStorage
-  const getAsyncData = async () => {
-    try {
-      const data = await AsyncStorage.getItem('bitcoin');
-      const parsedData = JSON.parse(data);
-      return parsedData;
-    } catch (error) {
-      console.log(error);
-    }
-  };
   return (
     <>
       {!bitcoinData && <Spinner />}
