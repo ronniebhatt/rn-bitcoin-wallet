@@ -3,14 +3,18 @@ import {Text, TouchableOpacity, StyleSheet, Dimensions} from 'react-native';
 
 const {width} = Dimensions.get('window');
 
-export default function CustomButton({handleBtnClick, isDisabled = false}) {
+export default function CustomButton({
+  text,
+  handleBtnClick,
+  isDisabled = false,
+}) {
   return (
     <TouchableOpacity
       disabled={isDisabled}
       activeOpacity={0.7}
-      style={styles.btn}
+      style={{...styles.btn}}
       onPress={handleBtnClick}>
-      <Text style={styles.btnText}>SEND</Text>
+      <Text style={styles.btnText}>{text}</Text>
     </TouchableOpacity>
   );
 }
