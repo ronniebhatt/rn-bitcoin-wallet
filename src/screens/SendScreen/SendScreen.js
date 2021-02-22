@@ -156,7 +156,7 @@ export default function SendScreen({route}) {
           </View>
 
           <View style={styles.btnOuterContainer}>
-            <CustomButton handleBtnClick={handleSendBtn} />
+            <CustomButton text="SEND" handleBtnClick={handleSendBtn} />
           </View>
 
           {showErrorMsg && (
