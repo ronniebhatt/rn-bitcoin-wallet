@@ -1,71 +1,64 @@
-import React, {useContext, useEffect} from 'react';
+import React, {useContext} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import HomeScreen from './src/screens/HomeScreen/HomeScreen';
 import SendScreen from './src/screens/SendScreen/SendScreen';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import LoginScreen from './src/screens/LoginScreen/LoginScreen';
+import {ActivityIndicator, Text, View} from 'react-native';
+import Modal from 'react-native-modal';
 import Contexts from './src/Contexts/Contexts';
-import generateRandomTestnet from './src/Helper/generateRandomTestnet';
-import PasswordScreen from './src/screens/PasswordScreen/PasswordScreen';
+import ReceiveScreen from './src/screens/ReceiveScreen/ReceiveScreen';
 
 const Stack = createStackNavigator();
 
 export default function App() {
-  const {setStoredBitcoinData} = useContext(Contexts);
+  const {handleGlobalSpinner, globalSpinner} = useContext(Contexts);
 
-  // bitcoin data from asyncStorage
-  const getAsyncData = async () => {
-    try {
-      const data = await AsyncStorage.getItem('bitcoin');
-      const parsedData = JSON.parse(data);
-      return parsedData;
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  // generate random address
-  // store bitcoin address , wif and private key to AsyncStorage
-  const generateRandomAndStoreData = async () => {
-    const data = generateRandomTestnet();
-    try {
-      const jsonValue = JSON.stringify(data);
-      await AsyncStorage.setItem('bitcoin', jsonValue);
-      setStoredBitcoinData(data);
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
-  // first load
-  useEffect(() => {
-    const getData = async () => {
-      const asyncData = await getAsyncData();
-      // if data exist already
-      // set data to context
-      if (asyncData) {
-        setStoredBitcoinData(asyncData);
-      }
-
-      // if dosen't already
-      // create random and store data
-
-      if (!asyncData) {
-        generateRandomAndStoreData();
-      }
-    };
-    getData();
-  }, []);
-
+  const renderGlobalLoader = () => (
+    <Modal
+      onRequestClose={() => handleGlobalSpinner(false)}
+      supportedOrientations={['landscape', 'portrait']}
+      transparent
+      visible={globalSpinner}
+      statusBarTranslucent
+      style={{marginHorizontal: 0, marginVertical: 0}}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+        }}>
+        <View
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#4272B6',
+            width: 140,
+            height: 110,
+            borderRadius: 10,
+          }}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={{color: '#fff', fontSize: 18, marginTop: 10}}>
+            Loading...
+          </Text>
+        </View>
+      </View>
+    </Modal>
+  );
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="Password"
-        screenOptions={{headerShown: false}}>
-        <Stack.Screen name="Password" component={PasswordScreen} />
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="SendScreen" component={SendScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <>
+      {renderGlobalLoader()}
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName="Home"
+          screenOptions={{headerShown: false}}>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="SendScreen" component={SendScreen} />
+          <Stack.Screen name="ReceiveScreen" component={ReceiveScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </>
   );
 }
