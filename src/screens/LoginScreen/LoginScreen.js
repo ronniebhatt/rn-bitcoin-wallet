@@ -1,6 +1,5 @@
 import React, {useEffect, useState, useContext} from 'react';
 import {View, Text, SafeAreaView, Image, TextInput} from 'react-native';
-import '../../../shim';
 import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import Contexts from '../../Contexts/Contexts';
 import AsyncStorage from '@react-native-async-storage/async-storage';

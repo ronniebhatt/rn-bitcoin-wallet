@@ -4,7 +4,6 @@ import styles from './styles';
 import Contexts from '../../Contexts/Contexts';
 import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import broadcastTransaction from '../../api/bitcoin/broadcastTransaction';
-import '../../../shim';
 import Spinner from '../../Components/Spinner/Spinner';
 import CustomButton from '../../Components/CustomButton/CustomButton';
 const bitcoin = require('bitcoinjs-lib');

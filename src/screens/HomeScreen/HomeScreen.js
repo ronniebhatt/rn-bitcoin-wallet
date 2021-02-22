@@ -7,7 +7,6 @@ import {
   FlatList,
   RefreshControl,
 } from 'react-native';
-import '../../../shim';
 import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import TransactionCard from '../../Components/TransactionCard/TransactionCard';
 import styles from './styles';
