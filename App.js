@@ -6,6 +6,7 @@ import SendScreen from './src/screens/SendScreen/SendScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Contexts from './src/Contexts/Contexts';
 import generateRandomTestnet from './src/Helper/generateRandomTestnet';
+import PasswordScreen from './src/screens/PasswordScreen/PasswordScreen';
 
 const Stack = createStackNavigator();
 
@@ -59,8 +60,9 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Home"
+        initialRouteName="Password"
         screenOptions={{headerShown: false}}>
+        <Stack.Screen name="Password" component={PasswordScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="SendScreen" component={SendScreen} />
       </Stack.Navigator>
