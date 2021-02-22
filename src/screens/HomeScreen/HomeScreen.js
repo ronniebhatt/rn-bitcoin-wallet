@@ -14,27 +14,88 @@ import styles from './styles';
 import Contexts from '../../Contexts/Contexts';
 import Spinner from '../../Components/Spinner/Spinner';
 import CustomButton from '../../Components/CustomButton/CustomButton';
+const bitcoin = require('bitcoinjs-lib');
+const bip39 = require('bip39');
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {LOGO_URL} from '../../api/constant';
 
 export default function HomeScreen({navigation}) {
   const [bitcoinData, setBitcoinData] = useState(null);
   const [outIn, setOutIn] = useState(0);
   const [lastHash, setLastHash] = useState('');
-  const {storedBitcoinData} = useContext(Contexts);
+  const {storedBitcoinData, setStoredBitcoinData} = useContext(Contexts);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentNo, setCurrentNo] = useState(23);
+  let arr = [];
 
   let senderAddress = {};
 
   const onRefresh = () => {
     if (storedBitcoinData) {
       setRefreshing(true);
-      console.log('called 2');
       getBitcoinData(storedBitcoinData.address);
       setRefreshing(false);
     }
   };
 
+  function getAddress(node) {
+    return {
+      address: bitcoin.payments.p2pkh({
+        pubkey: node.publicKey,
+        network: bitcoin.networks.testnet,
+      }).address,
+      privateKey: node.toWIF(),
+    };
+  }
+
+  const generateRandomAndStoreData = async (data) => {
+    try {
+      const jsonValue = JSON.stringify(data);
+      await AsyncStorage.setItem('bitcoin', jsonValue);
+      setStoredBitcoinData(data);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const generate = async () => {
+    const seed = bip39.mnemonicToSeedSync(
+      'relief ask nest obvious analyst useful champion spell fly letter simple senior',
+    );
+    console.log('seed', seed);
+    const root = bitcoin.bip32.fromSeed(seed, bitcoin.networks.testnet);
+    console.log('root', root);
+    // const branch = root.deriveHardened(0).derive(0).derive(0);
+    const branch = root
+      .deriveHardened(44)
+      .deriveHardened(1)
+      .deriveHardened(0)
+      .derive(0);
+
+    for (let i = 0; i < currentNo; ++i) {
+      arr.push(getAddress(branch.derive(i)));
+    }
+    console.log(arr);
+    const lastArray = arr.slice(-1).pop();
+    console.log('here11', lastArray.address);
+    const data = await getBitcoinDatatwo(lastArray.address);
+    console.log('data', data);
+    if (data.txs.length === 0) {
+      console.log('unused', lastArray.address);
+      generateRandomAndStoreData({
+        address: lastArray.address,
+        privateKey: lastArray.privateKey,
+      });
+      return true;
+    } else {
+      console.log('used', lastArray.address);
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (bitcoinData) {
+      console.log('bitcoinData', bitcoinData);
       // setting last hash address
       if (bitcoinData.txs.length !== 0) {
         setLastHash(bitcoinData.txs[0].hash);
@@ -57,12 +118,45 @@ export default function HomeScreen({navigation}) {
     }
   }, [bitcoinData]);
 
+  const callFun = async () => {
+    const isUnused = await generate();
+    console.log('isUnused', isUnused);
+    if (!isUnused) {
+      setCurrentNo(currentNo + 20);
+      callFun();
+    }
+  };
+
+  // useEffect(() => {
+  // const callFun = async () => {
+  //   const isUnused = await generate();
+  //   console.log('isUnused', isUnused);
+  //   if (!isUnused) {
+  //     setCurrentNo(currentNo + 10);
+  //     generate();
+  //   }
+  // };
+  //   callFun();
+  // }, [currentNo]);
+
   // get bitcoin data by bitcoin address
   const getBitcoinData = async (address) => {
     try {
       const data = await getBitcoinDetails(address);
       console.log('new bit', data);
       setBitcoinData(data);
+      if (data.txs.length !== 0) {
+        callFun();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const getBitcoinDatatwo = async (address) => {
+    try {
+      const data = await getBitcoinDetails(address);
+      setBitcoinData(data);
+      return data;
     } catch (error) {
       console.log(error);
     }
@@ -70,13 +164,35 @@ export default function HomeScreen({navigation}) {
 
   // initial load
   useEffect(() => {
-    if (storedBitcoinData) {
-      console.log('called 2');
+    const calla = async () => {
+      if (storedBitcoinData) {
+        console.log('called 2');
+        getBitcoinDatatwo(storedBitcoinData.address);
+      } else {
+        console.log('here');
+        const asyncData = await getAsyncData();
+        // if data exist already
+        // set data to context
+        if (asyncData) {
+          setStoredBitcoinData(asyncData);
+        }
+      }
+    };
 
-      getBitcoinData(storedBitcoinData.address);
-    }
+    calla();
   }, [storedBitcoinData]);
 
+  // temp
+  // bitcoin data from asyncStorage
+  const getAsyncData = async () => {
+    try {
+      const data = await AsyncStorage.getItem('bitcoin');
+      const parsedData = JSON.parse(data);
+      return parsedData;
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <>
       {!bitcoinData && <Spinner />}
@@ -89,7 +205,7 @@ export default function HomeScreen({navigation}) {
                 style={styles.logo}
                 resizeMode="contain"
                 source={{
-                  uri: 'https://en.bitcoin.it/w/images/en/2/29/BC_Logo_.png',
+                  uri: LOGO_URL,
                 }}
               />
 
@@ -104,11 +220,22 @@ export default function HomeScreen({navigation}) {
               </Text>
 
               <View style={styles.btnContainer}>
+                <View style={{marginVertical: 20}}>
+                  <CustomButton
+                    text="SEND"
+                    handleBtnClick={() =>
+                      navigation.navigate('SendScreen', {
+                        outIn,
+                        lastHash,
+                        bitcoinData,
+                      })
+                    }
+                  />
+                </View>
                 <CustomButton
+                  text="RECEIVE"
                   handleBtnClick={() =>
-                    navigation.navigate('SendScreen', {
-                      outIn,
-                      lastHash,
+                    navigation.navigate('ReceiveScreen', {
                       bitcoinData,
                     })
                   }

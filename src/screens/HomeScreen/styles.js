@@ -8,10 +8,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   topContainer: {
-    height: height * 0.4,
+    height: height * 0.47,
   },
   bottomContainer: {
-    height: height * 0.6,
+    height: height * 0.53,
     borderTopEndRadius: 20,
     borderTopStartRadius: 20,
     backgroundColor: '#265C7E',
