@@ -13,13 +13,11 @@ import styles from './styles';
 import Contexts from '../../Contexts/Contexts';
 import Spinner from '../../Components/Spinner/Spinner';
 import CustomButton from '../../Components/CustomButton/CustomButton';
-import {LOGO_URL} from '../../api/constant';
+import {LOGO_URL} from '../../api/bitcoin/constant';
 import generateTestnetAddressAndPrivateKey from '../../Helper/generateTestnetAddress';
 
 export default function HomeScreen({navigation}) {
   const [bitcoinData, setBitcoinData] = useState(null);
-  const [outIn, setOutIn] = useState(0);
-  const [lastHash, setLastHash] = useState('');
   const {
     storedBitcoinData,
     setStoredBitcoinData,
@@ -38,30 +36,6 @@ export default function HomeScreen({navigation}) {
       setRefreshing(false);
     }
   };
-
-  // useEffect(() => {
-  //   if (bitcoinData) {
-  //     console.log('bitcoinData', bitcoinData);
-  //     // setting last hash address
-  //     if (bitcoinData.txs.length !== 0) {
-  //       setLastHash(bitcoinData.txs[0].hash);
-  //       // setting out in
-  //       const outputData = [];
-  //       let currentIndex = 0;
-  //       bitcoinData &&
-  //         bitcoinData.txs &&
-  //         bitcoinData.txs[0].outputs.map((output, index) => {
-  //           if (output.addresses.includes(storedBitcoinData.address)) {
-  //             outputData.push(output);
-  //             currentIndex = index;
-  //           }
-  //         });
-  //       if (outputData[0]) {
-  //         setOutIn(currentIndex);
-  //       }
-  //     }
-  //   }
-  // }, [bitcoinData]);
 
   // validate new address
   const validateAddress = async () => {
@@ -93,11 +67,11 @@ export default function HomeScreen({navigation}) {
     try {
       const data = await getBitcoinDetails(address);
       setBitcoinData(data);
-      if (data.txs.length !== 0) {
-        setTimeout(() => {
-          validateAddress();
-        }, 5000);
-      }
+      // if (data.txs.length !== 0) {
+      //   setTimeout(() => {
+      //     validateAddress();
+      //   }, 5000);
+      // }
       return data;
     } catch (error) {
       console.log(error);
@@ -143,8 +117,6 @@ export default function HomeScreen({navigation}) {
                     text="SEND"
                     handleBtnClick={() =>
                       navigation.navigate('SendScreen', {
-                        outIn,
-                        lastHash,
                         bitcoinData,
                       })
                     }
@@ -221,7 +193,7 @@ export default function HomeScreen({navigation}) {
                       {debitedArray.map((debit, index) => {
                         let totalDeducted = 0;
                         if (senderAddress[item.hash]) {
-                          totalDeducted = senderAddress[item.hash].value + 1000;
+                          totalDeducted = senderAddress[item.hash].value;
                         } else {
                           totalDeducted = debit.output_value;
                         }

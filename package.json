@@ -20,6 +20,7 @@
     "bip39": "^3.0.3",
     "bitcoinjs-lib": "^5.2.0",
     "buffer": "^6.0.3",
+    "coinselect": "^3.1.12",
     "events": "^1.1.1",
     "process": "^0.11.10",
     "react": "16.13.1",

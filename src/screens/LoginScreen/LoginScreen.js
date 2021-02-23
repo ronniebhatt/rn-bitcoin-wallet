@@ -2,7 +2,7 @@ import React, {useContext, useRef} from 'react';
 import {View, Text, SafeAreaView, Image, TextInput} from 'react-native';
 import Contexts from '../../Contexts/Contexts';
 import styles from './styles';
-import {LOGO_URL} from '../../api/constant';
+import {LOGO_URL} from '../../api/bitcoin/constant';
 import CustomButton from '../../Components/CustomButton/CustomButton';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import generateTestnetAddressAndPrivateKey from '../../Helper/generateTestnetAddress';
