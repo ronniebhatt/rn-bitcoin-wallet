@@ -22,6 +22,7 @@ export default function HomeScreen({navigation}) {
     storedBitcoinData,
     setStoredBitcoinData,
     handleGlobalSpinner,
+    mnemonicWord,
   } = useContext(Contexts);
   const [refreshing, setRefreshing] = useState(false);
   const ref = useRef({currentNo: 10});
@@ -51,6 +52,7 @@ export default function HomeScreen({navigation}) {
   const generateUnusedAddress = async () => {
     const data = await generateTestnetAddressAndPrivateKey(
       ref.current.currentNo,
+      mnemonicWord,
     );
     if (data) {
       setStoredBitcoinData(data);
@@ -67,11 +69,11 @@ export default function HomeScreen({navigation}) {
     try {
       const data = await getBitcoinDetails(address);
       setBitcoinData(data);
-      // if (data.txs.length !== 0) {
-      //   setTimeout(() => {
-      //     validateAddress();
-      //   }, 5000);
-      // }
+      if (data.txs.length !== 0) {
+        setTimeout(() => {
+          validateAddress();
+        }, 1000);
+      }
       return data;
     } catch (error) {
       console.log(error);

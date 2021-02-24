@@ -5,6 +5,7 @@ const AppStorage = ({children}) => {
   const [storedBitcoinData, setStoredBitcoinData] = useState(null);
   const [globalSpinner, setGlobalSpinner] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mnemonicWord, setMnemonicWord] = useState('');
 
   const handleGlobalSpinner = (data) => {
     setGlobalSpinner(data);
@@ -17,6 +18,8 @@ const AppStorage = ({children}) => {
     globalSpinner,
     setIsLoggedIn,
     isLoggedIn,
+    mnemonicWord,
+    setMnemonicWord,
   };
 
   return (

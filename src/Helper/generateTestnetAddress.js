@@ -22,10 +22,11 @@ const getBitcoinData = async (address) => {
   }
 };
 
-const generateTestnetAddressAndPrivateKey = async (currentNo) => {
-  const seed = bip39.mnemonicToSeedSync(
-    'elephant mountain scatter chair strike input dragon maple amazing eight office know',
-  );
+const generateTestnetAddressAndPrivateKey = async (
+  currentNo,
+  mnemonicPhrase,
+) => {
+  const seed = bip39.mnemonicToSeedSync(mnemonicPhrase);
   const root = bitcoin.bip32.fromSeed(seed, bitcoin.networks.testnet);
   const branch = root
     .deriveHardened(44)

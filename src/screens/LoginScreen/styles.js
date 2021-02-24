@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
   textInputOuterContainer: {
     width: width - 20,
     alignSelf: 'center',
-    marginTop: 50,
+    marginTop: 20,
   },
   textInput: {
     borderWidth: 1,
