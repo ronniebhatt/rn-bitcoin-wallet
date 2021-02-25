@@ -133,13 +133,13 @@ export default function SendScreen({route}) {
 
     // check testnet address is empty
     if (!address) {
-      Alert.alert('Enter Testnet Address');
+      Alert.alert('ALERT', 'Enter Testnet Address');
       return;
     }
 
     // check amount is empty
     if (!amount) {
-      Alert.alert('Enter Amount');
+      Alert.alert('ALERT', 'Enter Amount');
       return;
     }
 
