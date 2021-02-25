@@ -1,4 +1,4 @@
-import React, {useContext} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import HomeScreen from './src/screens/HomeScreen/HomeScreen';
@@ -8,11 +8,40 @@ import {ActivityIndicator, Text, View} from 'react-native';
 import Modal from 'react-native-modal';
 import Contexts from './src/Contexts/Contexts';
 import ReceiveScreen from './src/screens/ReceiveScreen/ReceiveScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Spinner from './src/Components/Spinner/Spinner';
 
 const Stack = createStackNavigator();
 
 export default function App() {
-  const {handleGlobalSpinner, globalSpinner, isLoggedIn} = useContext(Contexts);
+  const {
+    handleGlobalSpinner,
+    globalSpinner,
+    isLoggedIn,
+    setIsLoggedIn,
+    setStoredBitcoinData,
+  } = useContext(Contexts);
+  const [loading, setLoading] = useState(false);
+
+  const getAsyncBitcoinData = async () => {
+    setLoading(true);
+    try {
+      const data = await AsyncStorage.getItem('bitcoin_async_data');
+      if (data) {
+        setIsLoggedIn(true);
+        const newData = await JSON.parse(data);
+        setStoredBitcoinData(newData);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getAsyncBitcoinData();
+  }, [isLoggedIn]);
 
   const renderGlobalLoader = () => (
     <Modal
@@ -58,7 +87,9 @@ export default function App() {
       <Stack.Screen name="ReceiveScreen" component={ReceiveScreen} />
     </>
   );
-  return (
+  return loading ? (
+    <Spinner />
+  ) : (
     <>
       {renderGlobalLoader()}
       <NavigationContainer>

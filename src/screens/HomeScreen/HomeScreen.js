@@ -6,6 +6,7 @@ import {
   Image,
   FlatList,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
 import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import TransactionCard from '../../Components/TransactionCard/TransactionCard';
@@ -15,6 +16,8 @@ import Spinner from '../../Components/Spinner/Spinner';
 import CustomButton from '../../Components/CustomButton/CustomButton';
 import {LOGO_URL} from '../../api/bitcoin/constant';
 import generateTestnetAddressAndPrivateKey from '../../Helper/generateTestnetAddress';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 
 export default function HomeScreen({navigation}) {
   const [bitcoinData, setBitcoinData] = useState(null);
@@ -23,6 +26,7 @@ export default function HomeScreen({navigation}) {
     setStoredBitcoinData,
     handleGlobalSpinner,
     mnemonicWord,
+    setIsLoggedIn,
   } = useContext(Contexts);
   const [refreshing, setRefreshing] = useState(false);
   const ref = useRef({currentNo: 10});
@@ -68,12 +72,14 @@ export default function HomeScreen({navigation}) {
   const getBitcoinData = async (address) => {
     try {
       const data = await getBitcoinDetails(address);
+      console.log('called ini,', data);
+
       setBitcoinData(data);
-      if (data.txs.length !== 0) {
-        setTimeout(() => {
-          validateAddress();
-        }, 1000);
-      }
+      // if (data.txs.length !== 0) {
+      //   setTimeout(() => {
+      //     validateAddress();
+      //   }, 1000);
+      // }
       return data;
     } catch (error) {
       console.log(error);
@@ -86,6 +92,27 @@ export default function HomeScreen({navigation}) {
       getBitcoinData(storedBitcoinData.address);
     }
   }, [storedBitcoinData]);
+
+  const getAsyncBitcoinData = async () => {
+    try {
+      const data = await AsyncStorage.getItem('bitcoin_async_data');
+      if (data) {
+        const newData = await JSON.parse(data);
+        setStoredBitcoinData(newData);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getAsyncBitcoinData();
+  }, []);
+
+  const handleLogout = async () => {
+    setIsLoggedIn(false);
+    await AsyncStorage.clear();
+  };
 
   return (
     <>
@@ -102,6 +129,12 @@ export default function HomeScreen({navigation}) {
                   uri: LOGO_URL,
                 }}
               />
+
+              <TouchableOpacity
+                onPress={handleLogout}
+                style={{position: 'absolute', right: 15, top: 15}}>
+                <AntDesign name="logout" size={30} />
+              </TouchableOpacity>
 
               {/* CURRENT BALANCE */}
               <Text style={styles.balanceText}>
