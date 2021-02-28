@@ -17,8 +17,7 @@ import CustomButton from '../../Components/CustomButton/CustomButton';
 import {LOGO_URL} from '../../api/bitcoin/constant';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-const bitcoin = require('bitcoinjs-lib');
-const bip39 = require('bip39');
+import generateUtxos from '../../Helper/generateUtxos';
 
 export default function HomeScreen({navigation}) {
   const [bitcoinData, setBitcoinData] = useState(null);
@@ -27,18 +26,28 @@ export default function HomeScreen({navigation}) {
     setStoredBitcoinData,
     setIsLoggedIn,
     bitcoinBalance,
-    utxos,
-    setMnemonicRoot,
+    setBitcoinBalance,
+    setUtxos,
+    usedAndUnusedData,
   } = useContext(Contexts);
   const [refreshing, setRefreshing] = useState(false);
+  const utxoArray = [];
+  let balance = 0;
 
   let senderAddress = {};
 
   // handle pull to refresh
-  const onRefresh = () => {
+  const onRefresh = async () => {
     if (storedBitcoinData) {
       setRefreshing(true);
       getBitcoinData(storedBitcoinData.address);
+      await generateUtxos(
+        usedAndUnusedData,
+        setBitcoinBalance,
+        setUtxos,
+        utxoArray,
+        balance,
+      );
       setRefreshing(false);
     }
   };
@@ -81,14 +90,6 @@ export default function HomeScreen({navigation}) {
     await AsyncStorage.clear();
     setIsLoggedIn(false);
   };
-
-  useEffect(() => {
-    const seed = bip39.mnemonicToSeedSync(
-      'soldier mad feature can situate bus harvest police flavor lucky cable squirrel',
-    );
-    const root = bitcoin.bip32.fromSeed(seed, bitcoin.networks.testnet);
-    setMnemonicRoot(root);
-  }, []);
 
   return (
     <>

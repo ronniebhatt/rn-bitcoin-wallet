@@ -5,6 +5,7 @@ const generateUtxos = async (
   utxoArray,
   balance,
 ) => {
+  console.log('called');
   Promise.all(
     Object.keys(data).map((address) => {
       return new Promise((resolve) => {
@@ -31,6 +32,8 @@ const generateUtxos = async (
       });
     }),
   ).then(() => {
+    console.log('called', utxoArray);
+
     setUtxos(utxoArray);
   });
 };

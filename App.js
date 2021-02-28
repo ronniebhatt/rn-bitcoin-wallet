@@ -25,6 +25,7 @@ export default function App() {
     setBitcoinBalance,
     setUsedAndUnusedData,
     setChangeAddress,
+    setMnemonicRoot,
   } = useContext(Contexts);
   const [loading, setLoading] = useState(false);
   const utxoArray = [];
@@ -40,9 +41,14 @@ export default function App() {
       // get usedUnusedAddress object from async
       const usedUnused = await AsyncStorage.getItem('usedUnusedAddress');
       const parsedUsedAndUnused = JSON.parse(usedUnused);
+      console.log('parsedUsedAndUnused', parsedUsedAndUnused);
       // get changeAddress from from async
       const changedAddressAsync = await AsyncStorage.getItem('change_address');
       setChangeAddress(changedAddressAsync);
+      // set mnemonic root
+      const mnemonicRoot = await AsyncStorage.getItem('mnemonic_root');
+      setMnemonicRoot(mnemonicRoot);
+
       //check if has existing bitcoin data on async
       if (data) {
         // get utxos
@@ -82,6 +88,7 @@ export default function App() {
                     address: parsedUsedAndUnused[el].address,
                   }),
                 );
+                setUsedAndUnusedData(parsedUsedAndUnused);
                 setIsLoggedIn(true);
                 handleGlobalSpinner(false);
               }

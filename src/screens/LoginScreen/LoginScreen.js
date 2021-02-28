@@ -1,4 +1,4 @@
-import React, {useContext, useRef, useState, useEffect} from 'react';
+import React, {useContext, useRef, useState} from 'react';
 import {View, Text, SafeAreaView, Image, TextInput, Alert} from 'react-native';
 import Contexts from '../../Contexts/Contexts';
 import styles from './styles';
@@ -21,6 +21,7 @@ export default function LoginScreen() {
     setIsLoggedIn,
     setUsedAndUnusedData,
     setChangeAddress,
+    setMnemonicRoot,
   } = useContext(Contexts);
 
   const [mnemonic, setMnemonic] = useState('');
@@ -33,6 +34,8 @@ export default function LoginScreen() {
     const addressAndPrivatekey = [];
     const seed = bip39.mnemonicToSeedSync(mnemonicPhrase);
     const root = bitcoin.bip32.fromSeed(seed, bitcoin.networks.testnet);
+    await AsyncStorage.setItem('mnemonic_root', mnemonicPhrase);
+    setMnemonicRoot(root);
     const branch = root
       .deriveHardened(44)
       .deriveHardened(1)
@@ -65,10 +68,12 @@ export default function LoginScreen() {
       addressAndPrivatekey.map((el) => {
         return new Promise((resolve) => {
           fetch(
-            `https://api.blockcypher.com/v1/btc/test3/addrs/${el.address}/full?limit=50&token=a657369943a148eba820eb667fcd5c26`,
+            `https://testnet-api.smartbit.com.au/v1/blockchain/address/${el.address}`,
+            // `https://api.blockcypher.com/v1/btc/test3/addrs/${el.address}/full?limit=50&token=a657369943a148eba820eb667fcd5c26`,
           ).then((response) => {
             return new Promise(() => {
               response.json().then((data) => {
+                // console.log('data', data.address.transactions);
                 if (data.address) {
                   apiAddressResponse.push(data);
                 }
@@ -84,24 +89,28 @@ export default function LoginScreen() {
         if (
           el.address &&
           (el.address =
-            apiAddressResponse[i].address &&
-            apiAddressResponse[i].txs.length === 0)
+            apiAddressResponse[i].address.address &&
+            !apiAddressResponse[i].address.transactions)
         ) {
           // getting all unused address and storing to obj
-          processedUsedAndUnusedAddress[apiAddressResponse[i].address] = {
+          processedUsedAndUnusedAddress[
+            apiAddressResponse[i].address.address
+          ] = {
             is_used: false,
-            address: apiAddressResponse[i].address,
+            address: apiAddressResponse[i].address.address,
             derivePath: `m/44'/1'/0'/0/${ref.current.generatedAddress.findIndex(
-              (x) => x.address === apiAddressResponse[i].address,
+              (x) => x.address === apiAddressResponse[i].address.address,
             )}`,
           };
         } else {
           // getting all used address and storing to obj
-          processedUsedAndUnusedAddress[apiAddressResponse[i].address] = {
+          processedUsedAndUnusedAddress[
+            apiAddressResponse[i].address.address
+          ] = {
             is_used: true,
-            address: apiAddressResponse[i].address,
+            address: apiAddressResponse[i].address.address,
             derivePath: `m/44'/1'/0'/0/${ref.current.generatedAddress.findIndex(
-              (x) => x.address === apiAddressResponse[i].address,
+              (x) => x.address === apiAddressResponse[i].address.address,
             )}`,
           };
         }

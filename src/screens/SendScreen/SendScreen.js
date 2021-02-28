@@ -1,5 +1,5 @@
-import React, {useState, useContext, useEffect} from 'react';
-import {View, Text, SafeAreaView, TextInput, Image, Alert} from 'react-native';
+import React, {useState, useContext} from 'react';
+import {View, SafeAreaView, TextInput, Image, Alert} from 'react-native';
 import styles from './styles';
 import Contexts from '../../Contexts/Contexts';
 import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
@@ -8,15 +8,14 @@ import CustomButton from '../../Components/CustomButton/CustomButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const bitcoin = require('bitcoinjs-lib');
 const coinSelect = require('coinselect');
-
 const testnet = bitcoin.networks.testnet;
+const bip39 = require('bip39');
 
 export default function SendScreen({route}) {
   const {bitcoinData} = route.params;
   const [address, setAddress] = useState('');
   const [amount, setAmount] = useState('');
   const {
-    storedBitcoinData,
     handleGlobalSpinner,
     utxos,
     usedAndUnusedData,
@@ -24,8 +23,6 @@ export default function SendScreen({route}) {
     setUsedAndUnusedData,
     changeAddress,
   } = useContext(Contexts);
-  const [showErrorMsg, setShowErrorMsg] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
 
   // check if receiver testnet address is valid or not
   const checkTestAddress = async (testnetAddress) => {
@@ -35,8 +32,7 @@ export default function SendScreen({route}) {
         return data.address;
       }
       if (!data) {
-        setShowErrorMsg(true);
-        setErrorMsg('Invalid Address');
+        Alert.alert('ALERT', 'Invalid Address');
         return false;
       }
     } catch (error) {
@@ -47,7 +43,7 @@ export default function SendScreen({route}) {
   // get unsigned transaction
   const getUnsignedTransaction = async (targets, feePerByte = 2) => {
     const formattedUTXO = [];
-
+    console.log('utxos', utxos);
     utxos.forEach((utxo) => {
       formattedUTXO.push({
         txId: utxo.txid,
@@ -112,8 +108,7 @@ export default function SendScreen({route}) {
       }
       if (!success) {
         handleGlobalSpinner(false);
-        setShowErrorMsg(true);
-        setErrorMsg(error.message);
+        Alert.alert('ALERT', error.message);
         return false;
       }
     } catch (error) {
@@ -169,10 +164,13 @@ export default function SendScreen({route}) {
 
             transactionBuilder.addOutput(output.address, output.value);
           });
+          const seed = bip39.mnemonicToSeedSync(mnemonicRoot);
+          const root = bitcoin.bip32.fromSeed(seed, bitcoin.networks.testnet);
 
           inputs.map((el, index) => {
+            console.log('el---', el);
             const keyPair = bitcoin.ECPair.fromWIF(
-              mnemonicRoot.derivePath(el.derivePath).toWIF(),
+              root.derivePath(el.derivePath).toWIF(),
               testnet,
             );
             transactionBuilder.sign(index, keyPair);
@@ -182,7 +180,7 @@ export default function SendScreen({route}) {
           const transactionHex = transaction.toHex();
           console.log('hex', transactionHex);
           if (transactionHex) {
-            broadcastRawTransaction(transactionHex);
+            broadcastRawTransaction(transactionHex, inputs);
           }
         }
         if (!success) {
@@ -226,12 +224,6 @@ export default function SendScreen({route}) {
         <View style={styles.btnOuterContainer}>
           <CustomButton text="SEND" handleBtnClick={handleSendBtn} />
         </View>
-
-        {showErrorMsg && (
-          <View style={styles.errorMsgContainer}>
-            <Text style={styles.errorText}>ERROR : {errorMsg}</Text>
-          </View>
-        )}
       </SafeAreaView>
     </>
   );
