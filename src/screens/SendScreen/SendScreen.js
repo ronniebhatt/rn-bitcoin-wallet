@@ -23,7 +23,6 @@ export default function SendScreen() {
     setUsedAndUnusedData,
     changeAddress,
   } = useContext(Contexts);
-  console.log('utxos', usedAndUnusedData);
 
   // check if receiver testnet address is valid or not
   const checkTestAddress = async (testnetAddress) => {
