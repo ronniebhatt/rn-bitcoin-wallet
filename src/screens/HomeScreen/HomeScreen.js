@@ -87,6 +87,8 @@ export default function HomeScreen({navigation}) {
   }, []);
 
   const handleLogout = async () => {
+    setBitcoinBalance(0);
+    setUtxos([]);
     await AsyncStorage.clear();
     setIsLoggedIn(false);
   };
@@ -134,11 +136,7 @@ export default function HomeScreen({navigation}) {
                 </View>
                 <CustomButton
                   text="RECEIVE"
-                  handleBtnClick={() =>
-                    navigation.navigate('ReceiveScreen', {
-                      bitcoinData,
-                    })
-                  }
+                  handleBtnClick={() => navigation.navigate('ReceiveScreen')}
                 />
               </View>
             </View>

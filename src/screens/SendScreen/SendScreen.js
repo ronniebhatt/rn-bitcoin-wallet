@@ -12,8 +12,7 @@ const coinSelect = require('coinselect');
 const testnet = bitcoin.networks.testnet;
 const bip39 = require('bip39');
 
-export default function SendScreen({route}) {
-  const {bitcoinData} = route.params;
+export default function SendScreen() {
   const [address, setAddress] = useState('');
   const [amount, setAmount] = useState('');
   const {
@@ -24,6 +23,7 @@ export default function SendScreen({route}) {
     setUsedAndUnusedData,
     changeAddress,
   } = useContext(Contexts);
+  console.log('utxos', usedAndUnusedData);
 
   // check if receiver testnet address is valid or not
   const checkTestAddress = async (testnetAddress) => {
@@ -53,7 +53,15 @@ export default function SendScreen({route}) {
         derivePath: utxo.derivePath,
       });
     });
+
     let {inputs, outputs, fee} = coinSelect(formattedUTXO, targets, feePerByte);
+    if (!inputs || !outputs) {
+      return {
+        success: false,
+        message: 'Insufficient Balance',
+        fee,
+      };
+    }
 
     const data = inputs.map((input, index) => {
       if (input.confirmed) {
@@ -62,19 +70,12 @@ export default function SendScreen({route}) {
         return false;
       }
     });
+
     if (data.includes(false)) {
       return {
         success: false,
         message:
           'Waiting for transaction to confirm. Please try after sometime.',
-        fee,
-      };
-    }
-
-    if (!inputs || !outputs) {
-      return {
-        success: false,
-        message: 'Insufficient Balance',
         fee,
       };
     }
@@ -136,7 +137,6 @@ export default function SendScreen({route}) {
 
     // validate receiver address
     const data = await checkTestAddress(address);
-
     // recipient address and amount
     const targets = [
       {
@@ -151,7 +151,6 @@ export default function SendScreen({route}) {
         // check unsigned transaction
         const data = await getUnsignedTransaction(targets);
         const {success, inputs, outputs, message} = data;
-
         if (success) {
           const transactionBuilder = new bitcoin.TransactionBuilder(testnet);
 
