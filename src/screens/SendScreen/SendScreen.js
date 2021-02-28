@@ -5,7 +5,7 @@ import Contexts from '../../Contexts/Contexts';
 import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import broadcastTransaction from '../../api/bitcoin/broadcastTransaction';
 import CustomButton from '../../Components/CustomButton/CustomButton';
-import getUtxosTransaction from '../../api/bitcoin/getUtxosTransaction';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const bitcoin = require('bitcoinjs-lib');
 const coinSelect = require('coinselect');
 
@@ -15,10 +15,19 @@ export default function SendScreen({route}) {
   const {bitcoinData} = route.params;
   const [address, setAddress] = useState('');
   const [amount, setAmount] = useState('');
-  const {storedBitcoinData, handleGlobalSpinner} = useContext(Contexts);
+  const {
+    storedBitcoinData,
+    handleGlobalSpinner,
+    utxos,
+    usedAndUnusedData,
+    mnemonicRoot,
+    setUsedAndUnusedData,
+    changeAddress,
+  } = useContext(Contexts);
   const [showErrorMsg, setShowErrorMsg] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [utxosList, setUtxoList] = useState({});
+
+  console.log('storedBitcoinData', storedBitcoinData);
 
   // check if receiver testnet address is valid or not
   const checkTestAddress = async (testnetAddress) => {
@@ -38,26 +47,7 @@ export default function SendScreen({route}) {
   };
 
   // get unsigned transaction
-  const getUtxosTransactions = async (address) => {
-    handleGlobalSpinner(true);
-    try {
-      const data = await getUtxosTransaction(address);
-      setUtxoList(data);
-      handleGlobalSpinner(false);
-    } catch (error) {
-      console.log(error);
-      handleGlobalSpinner(false);
-    }
-  };
-
-  useEffect(() => {
-    if (storedBitcoinData.address) {
-      getUtxosTransactions(storedBitcoinData.address);
-    }
-  }, []);
-
-  // get unsigned transaction
-  const getUnsignedTransaction = async (utxos, targets, feePerByte = 1) => {
+  const getUnsignedTransaction = async (targets, feePerByte = 2) => {
     const formattedUTXO = [];
 
     utxos.forEach((utxo) => {
@@ -65,25 +55,28 @@ export default function SendScreen({route}) {
         txId: utxo.txid,
         vout: utxo.vout,
         value: utxo.value,
+        confirmed: utxo.status.confirmed,
+        derivePath: utxo.derivePath,
       });
     });
-
     let {inputs, outputs, fee} = coinSelect(formattedUTXO, targets, feePerByte);
 
-    const data = inputs.map((input, index) => {
-      let isConfirmed = false;
-      bitcoinData.txs.map((transaction) => {
-        if (input.txId === transaction.hash) {
-          if (transaction.confirmations >= 1) isConfirmed = true;
-        }
-      });
-      return isConfirmed;
-    });
+    console.log('formattedUTXO', inputs);
+    console.log('formattedUTXO', fee);
 
+    const data = inputs.map((input, index) => {
+      if (input.confirmed) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+    console.log('data', data);
     if (data.includes(false)) {
       return {
         success: false,
-        message: 'Waiting for transaction to confirm',
+        message:
+          'Waiting for transaction to confirm. Please try after sometime.',
         fee,
       };
     }
@@ -115,6 +108,13 @@ export default function SendScreen({route}) {
       if (success) {
         handleGlobalSpinner(false);
         Alert.alert('Transaction sent Successfully');
+        const newUsedAndUnusedData = {...usedAndUnusedData};
+        newUsedAndUnusedData[bitcoinData.address].is_used = true;
+        setUsedAndUnusedData(newUsedAndUnusedData);
+        await AsyncStorage.setItem(
+          'usedUnusedAddress',
+          JSON.stringify(newUsedAndUnusedData),
+        );
       }
       if (!success) {
         handleGlobalSpinner(false);
@@ -158,11 +158,12 @@ export default function SendScreen({route}) {
     if (data) {
       try {
         // check unsigned transaction
-        const data = await getUnsignedTransaction(utxosList, targets);
+        const data = await getUnsignedTransaction(targets);
         const {success, inputs, outputs, message} = data;
 
         if (success) {
           const transactionBuilder = new bitcoin.TransactionBuilder(testnet);
+          console.log('input', inputs);
 
           inputs.forEach((input) =>
             transactionBuilder.addInput(input.txId, input.vout),
@@ -170,26 +171,31 @@ export default function SendScreen({route}) {
 
           outputs.forEach((output) => {
             if (!output.address) {
-              output.address = bitcoinData.address;
+              output.address = changeAddress;
             }
 
             transactionBuilder.addOutput(output.address, output.value);
           });
+          console.log('inputs', inputs);
 
-          const keyPair = bitcoin.ECPair.fromWIF(
-            storedBitcoinData.privateKey,
-            testnet,
-          );
-          transactionBuilder.sign(0, keyPair);
+          inputs.map((el, index) => {
+            const keyPair = bitcoin.ECPair.fromWIF(
+              mnemonicRoot.derivePath(el.derivePath).toWIF(),
+              testnet,
+            );
+            transactionBuilder.sign(index, keyPair);
+          });
+
           const transaction = transactionBuilder.build();
           const transactionHex = transaction.toHex();
+          console.log('hex', transactionHex);
           if (transactionHex) {
             broadcastRawTransaction(transactionHex);
           }
         }
         if (!success) {
           handleGlobalSpinner(false);
-          Alert.alert(message);
+          Alert.alert('ALERT', message);
         }
       } catch (error) {
         console.log('error', error);

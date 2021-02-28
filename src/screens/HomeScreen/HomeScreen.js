@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext, useRef} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import {
   View,
   Text,
@@ -15,21 +15,22 @@ import Contexts from '../../Contexts/Contexts';
 import Spinner from '../../Components/Spinner/Spinner';
 import CustomButton from '../../Components/CustomButton/CustomButton';
 import {LOGO_URL} from '../../api/bitcoin/constant';
-import generateTestnetAddressAndPrivateKey from '../../Helper/generateTestnetAddress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+const bitcoin = require('bitcoinjs-lib');
+const bip39 = require('bip39');
 
 export default function HomeScreen({navigation}) {
   const [bitcoinData, setBitcoinData] = useState(null);
   const {
     storedBitcoinData,
     setStoredBitcoinData,
-    handleGlobalSpinner,
-    mnemonicWord,
     setIsLoggedIn,
+    bitcoinBalance,
+    utxos,
+    setMnemonicRoot,
   } = useContext(Contexts);
   const [refreshing, setRefreshing] = useState(false);
-  const ref = useRef({currentNo: 10});
 
   let senderAddress = {};
 
@@ -42,44 +43,12 @@ export default function HomeScreen({navigation}) {
     }
   };
 
-  // validate new address
-  const validateAddress = async () => {
-    handleGlobalSpinner(true);
-    const isUnused = await generateUnusedAddress();
-    if (!isUnused) {
-      const currentIndex = ref.current.currentNo + 10;
-      ref.current.currentNo = currentIndex;
-      validateAddress();
-    }
-  };
-
-  const generateUnusedAddress = async () => {
-    const data = await generateTestnetAddressAndPrivateKey(
-      ref.current.currentNo,
-      mnemonicWord,
-    );
-    if (data) {
-      setStoredBitcoinData(data);
-      handleGlobalSpinner(false);
-      return true;
-    }
-    if (!data) {
-      return false;
-    }
-  };
-
   // get bitcoin data by bitcoin address
   const getBitcoinData = async (address) => {
+    console.log('add', address);
     try {
       const data = await getBitcoinDetails(address);
-      console.log('called ini,', data);
-
       setBitcoinData(data);
-      // if (data.txs.length !== 0) {
-      //   setTimeout(() => {
-      //     validateAddress();
-      //   }, 1000);
-      // }
       return data;
     } catch (error) {
       console.log(error);
@@ -110,9 +79,21 @@ export default function HomeScreen({navigation}) {
   }, []);
 
   const handleLogout = async () => {
-    setIsLoggedIn(false);
     await AsyncStorage.clear();
+    setIsLoggedIn(false);
   };
+
+  useEffect(() => {
+    const seed = bip39.mnemonicToSeedSync(
+      'soldier mad feature can situate bus harvest police flavor lucky cable squirrel',
+    );
+    const root = bitcoin.bip32.fromSeed(seed, bitcoin.networks.testnet);
+    setMnemonicRoot(root);
+  }, []);
+
+  useEffect(() => {
+    console.log('utxos', utxos);
+  }, [utxos]);
 
   return (
     <>
@@ -137,9 +118,7 @@ export default function HomeScreen({navigation}) {
               </TouchableOpacity>
 
               {/* CURRENT BALANCE */}
-              <Text style={styles.balanceText}>
-                Balance {bitcoinData && bitcoinData.balance}
-              </Text>
+              <Text style={styles.balanceText}>Balance {bitcoinBalance}</Text>
 
               {/* CURRENT TESTNET ADDRESS */}
               <Text style={styles.btnAddressText}>

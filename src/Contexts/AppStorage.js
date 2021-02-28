@@ -6,6 +6,11 @@ const AppStorage = ({children}) => {
   const [globalSpinner, setGlobalSpinner] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mnemonicWord, setMnemonicWord] = useState('');
+  const [usedAndUnusedData, setUsedAndUnusedData] = useState(null);
+  const [bitcoinBalance, setBitcoinBalance] = useState(0);
+  const [utxos, setUtxos] = useState([]);
+  const [mnemonicRoot, setMnemonicRoot] = useState(null);
+  const [changeAddress, setChangeAddress] = useState('');
 
   const handleGlobalSpinner = (data) => {
     setGlobalSpinner(data);
@@ -20,6 +25,16 @@ const AppStorage = ({children}) => {
     isLoggedIn,
     mnemonicWord,
     setMnemonicWord,
+    usedAndUnusedData,
+    setUsedAndUnusedData,
+    utxos,
+    setUtxos,
+    bitcoinBalance,
+    setBitcoinBalance,
+    mnemonicRoot,
+    setMnemonicRoot,
+    changeAddress,
+    setChangeAddress,
   };
 
   return (

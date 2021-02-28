@@ -4,7 +4,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import HomeScreen from './src/screens/HomeScreen/HomeScreen';
 import SendScreen from './src/screens/SendScreen/SendScreen';
 import LoginScreen from './src/screens/LoginScreen/LoginScreen';
-import {ActivityIndicator, Text, View} from 'react-native';
+import {ActivityIndicator, Text, View, StyleSheet} from 'react-native';
 import Modal from 'react-native-modal';
 import Contexts from './src/Contexts/Contexts';
 import ReceiveScreen from './src/screens/ReceiveScreen/ReceiveScreen';
@@ -20,17 +20,125 @@ export default function App() {
     isLoggedIn,
     setIsLoggedIn,
     setStoredBitcoinData,
+    setUtxos,
+    setBitcoinBalance,
+    setUsedAndUnusedData,
+    setChangeAddress,
   } = useContext(Contexts);
   const [loading, setLoading] = useState(false);
+  const utxoArray = [];
+  let balance = 0;
 
+  // get all utxos
+  const getAllUtxos = async (data) => {
+    Promise.all(
+      Object.keys(data).map((address) => {
+        return new Promise((resolve) => {
+          fetch(
+            `https://blockstream.info/testnet/api/address/${address}/utxo`,
+          ).then((response) => {
+            return new Promise(() => {
+              response.json().then((transactions) => {
+                if (transactions.length !== 0) {
+                  // setting total balance
+                  transactions.map((transaction) => {
+                    console.log('transaction--', transaction.value);
+                    console.log('balance--', balance);
+
+                    utxoArray.push({
+                      ...transaction,
+                      derivePath: data[address].derivePath,
+                    });
+                    balance += transaction.value;
+                  });
+                  setBitcoinBalance(balance);
+                }
+                resolve();
+              });
+            });
+          });
+        });
+      }),
+    ).then(() => {
+      setUtxos(utxoArray);
+    });
+  };
+
+  // get bitcoin data from async
   const getAsyncBitcoinData = async () => {
     setLoading(true);
     try {
+      // get bitcoin address from async
       const data = await AsyncStorage.getItem('bitcoin_async_data');
+      const parsedAddress = JSON.parse(data);
+      // get usedUnusedAddress object from async
+      const usedUnused = await AsyncStorage.getItem('usedUnusedAddress');
+      const parsedUsedAndUnused = JSON.parse(usedUnused);
+      // get changeAddress from from async
+      const changedAddressAsync = await AsyncStorage.getItem('change_address');
+      setChangeAddress(changedAddressAsync);
+      //check if has existing bitcoin data on async
+      console.log('data', parsedUsedAndUnused);
       if (data) {
-        setIsLoggedIn(true);
-        const newData = await JSON.parse(data);
-        setStoredBitcoinData(newData);
+        getAllUtxos(parsedUsedAndUnused);
+        // check if all list is used or not
+        const allArray = [];
+        console.log('here', parsedUsedAndUnused);
+        Object.keys(parsedUsedAndUnused).map((el) => {
+          if (parsedUsedAndUnused[el].is_used) {
+            allArray.push(true);
+          }
+        });
+
+        if (allArray.length === Object.keys(parsedUsedAndUnused).length) {
+          console.log('has no unused data async generate more 10');
+          setIsLoggedIn(false);
+          return;
+        }
+        if (allArray.length !== Object.keys(parsedUsedAndUnused).length) {
+          // login with the new address (next address)
+          if (parsedUsedAndUnused[parsedAddress.address].is_used) {
+            console.log('change to next address', allArray.length);
+            Object.keys(parsedUsedAndUnused).map((el) => {
+              if (!parsedUsedAndUnused[el].is_used) {
+                setStoredBitcoinData({
+                  address: parsedUsedAndUnused[el].address,
+                });
+                AsyncStorage.setItem(
+                  'bitcoin_async_data',
+                  JSON.stringify({
+                    address: parsedUsedAndUnused[el].address,
+                  }),
+                );
+                setIsLoggedIn(true);
+                handleGlobalSpinner(false);
+              }
+            });
+          }
+
+          // login with the same address
+          if (!parsedUsedAndUnused[parsedAddress.address].is_used) {
+            console.log('parsedAddress', parsedAddress.address);
+            setUsedAndUnusedData(parsedUsedAndUnused);
+            setStoredBitcoinData({
+              address: parsedAddress.address,
+            });
+            AsyncStorage.setItem(
+              'bitcoin_async_data',
+              JSON.stringify({
+                address: parsedAddress.address,
+              }),
+            );
+            setIsLoggedIn(true);
+            handleGlobalSpinner(false);
+          }
+        }
+      }
+
+      //check if it don't have existing bitcoin data on async
+      if (!data) {
+        console.log('here111');
+        setIsLoggedIn(false);
       }
       setLoading(false);
     } catch (error) {
@@ -43,6 +151,7 @@ export default function App() {
     getAsyncBitcoinData();
   }, [isLoggedIn]);
 
+  // Loader
   const renderGlobalLoader = () => (
     <Modal
       onRequestClose={() => handleGlobalSpinner(false)}
@@ -51,22 +160,8 @@ export default function App() {
       visible={globalSpinner}
       statusBarTranslucent
       style={{marginHorizontal: 0, marginVertical: 0}}>
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: 'rgba(0,0,0,0.5)',
-        }}>
-        <View
-          style={{
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#4272B6',
-            width: 140,
-            height: 110,
-            borderRadius: 10,
-          }}>
+      <View style={styles.loaderOuterContainer}>
+        <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#fff" />
           <Text style={{color: '#fff', fontSize: 18, marginTop: 10}}>
             Loading...
@@ -91,6 +186,7 @@ export default function App() {
     <Spinner />
   ) : (
     <>
+      {console.log('isLoggedIn', isLoggedIn)}
       {renderGlobalLoader()}
       <NavigationContainer>
         <Stack.Navigator screenOptions={{headerShown: false}}>
@@ -100,3 +196,20 @@ export default function App() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  loaderContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4272B6',
+    width: 140,
+    height: 110,
+    borderRadius: 10,
+  },
+  loaderOuterContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+});
