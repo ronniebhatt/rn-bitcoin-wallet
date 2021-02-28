@@ -12,7 +12,7 @@ const bitcoin = require('bitcoinjs-lib');
 
 export default function LoginScreen() {
   const ref = useRef({
-    currentNo: 5,
+    currentNo: 10,
     generatedAddress: [],
   });
   const {
@@ -32,6 +32,14 @@ export default function LoginScreen() {
   ) => {
     ref.current.generatedAddress = [];
     const addressAndPrivatekey = [];
+    const valid = bip39.validateMnemonic(mnemonicPhrase);
+
+    if (!valid) {
+      Alert.alert('ALERT', 'Enter valid mnemonic phase');
+      handleGlobalSpinner(false);
+      return;
+    }
+
     const seed = bip39.mnemonicToSeedSync(mnemonicPhrase);
     const root = bitcoin.bip32.fromSeed(seed, bitcoin.networks.testnet);
     await AsyncStorage.setItem('mnemonic_root', mnemonicPhrase);
@@ -145,7 +153,7 @@ export default function LoginScreen() {
       ) {
         // has no unused data generate more 10 address
         usedAddress.splice(0, usedAddress.length);
-        ref.current.currentNo += 5;
+        ref.current.currentNo += 10;
         generateTestnetAddressAndPrivateKey(ref.current.currentNo, mnemonic);
       } else {
         // has some unused data

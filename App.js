@@ -52,6 +52,7 @@ export default function App() {
       //check if has existing bitcoin data on async
       if (data) {
         // get utxos
+
         await generateUtxos(
           parsedUsedAndUnused,
           setBitcoinBalance,

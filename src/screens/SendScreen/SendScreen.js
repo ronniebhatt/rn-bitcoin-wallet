@@ -6,6 +6,7 @@ import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import broadcastTransaction from '../../api/bitcoin/broadcastTransaction';
 import CustomButton from '../../Components/CustomButton/CustomButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import generateAddress from '../../Helper/generateAddress';
 const bitcoin = require('bitcoinjs-lib');
 const coinSelect = require('coinselect');
 const testnet = bitcoin.networks.testnet;
@@ -90,16 +91,18 @@ export default function SendScreen({route}) {
   };
 
   // broadcast Transaction
-  const broadcastRawTransaction = async (hex) => {
+  const broadcastRawTransaction = async (hex, inputAddress) => {
     const postbody = {hex: hex};
     try {
       const {success, error} = await broadcastTransaction(postbody);
 
       if (success) {
         handleGlobalSpinner(false);
-        Alert.alert('Transaction sent Successfully');
+        Alert.alert('ALERT', 'Transaction sent Successfully');
         const newUsedAndUnusedData = {...usedAndUnusedData};
-        newUsedAndUnusedData[bitcoinData.address].is_used = true;
+        inputAddress.map((el) => {
+          newUsedAndUnusedData[el.address].is_used = true;
+        });
         setUsedAndUnusedData(newUsedAndUnusedData);
         await AsyncStorage.setItem(
           'usedUnusedAddress',
@@ -167,8 +170,9 @@ export default function SendScreen({route}) {
           const seed = bip39.mnemonicToSeedSync(mnemonicRoot);
           const root = bitcoin.bip32.fromSeed(seed, bitcoin.networks.testnet);
 
+          const inputAddress = [];
           inputs.map((el, index) => {
-            console.log('el---', el);
+            inputAddress.push(generateAddress(root.derivePath(el.derivePath)));
             const keyPair = bitcoin.ECPair.fromWIF(
               root.derivePath(el.derivePath).toWIF(),
               testnet,
@@ -180,7 +184,7 @@ export default function SendScreen({route}) {
           const transactionHex = transaction.toHex();
           console.log('hex', transactionHex);
           if (transactionHex) {
-            broadcastRawTransaction(transactionHex, inputs);
+            broadcastRawTransaction(transactionHex, inputAddress);
           }
         }
         if (!success) {

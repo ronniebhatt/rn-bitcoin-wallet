@@ -146,6 +146,10 @@ export default function HomeScreen({navigation}) {
             {/* TRANSACTION LIST CONTAINER */}
             <View style={styles.bottomContainer}>
               <Text style={styles.transactionText}>Transactions</Text>
+              <Text style={{color: '#fff', textAlign: 'center'}}>
+                Pull to refresh
+              </Text>
+
               <FlatList
                 keyExtractor={(item, index) => index.toString()}
                 refreshControl={
