@@ -44,7 +44,6 @@ export default function SendScreen({route}) {
   // get unsigned transaction
   const getUnsignedTransaction = async (targets, feePerByte = 2) => {
     const formattedUTXO = [];
-    console.log('utxos', utxos);
     utxos.forEach((utxo) => {
       formattedUTXO.push({
         txId: utxo.txid,
@@ -182,7 +181,6 @@ export default function SendScreen({route}) {
 
           const transaction = transactionBuilder.build();
           const transactionHex = transaction.toHex();
-          console.log('hex', transactionHex);
           if (transactionHex) {
             broadcastRawTransaction(transactionHex, inputAddress);
           }

@@ -41,7 +41,6 @@ export default function App() {
       // get usedUnusedAddress object from async
       const usedUnused = await AsyncStorage.getItem('usedUnusedAddress');
       const parsedUsedAndUnused = JSON.parse(usedUnused);
-      console.log('parsedUsedAndUnused', parsedUsedAndUnused);
       // get changeAddress from from async
       const changedAddressAsync = await AsyncStorage.getItem('change_address');
       setChangeAddress(changedAddressAsync);

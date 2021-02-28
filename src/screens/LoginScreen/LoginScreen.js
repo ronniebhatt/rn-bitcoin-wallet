@@ -81,7 +81,6 @@ export default function LoginScreen() {
           ).then((response) => {
             return new Promise(() => {
               response.json().then((data) => {
-                // console.log('data', data.address.transactions);
                 if (data.address) {
                   apiAddressResponse.push(data);
                 }
