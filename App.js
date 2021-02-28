@@ -10,6 +10,7 @@ import Contexts from './src/Contexts/Contexts';
 import ReceiveScreen from './src/screens/ReceiveScreen/ReceiveScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Spinner from './src/Components/Spinner/Spinner';
+import generateUtxos from './src/Helper/generateUtxos';
 
 const Stack = createStackNavigator();
 
@@ -29,41 +30,6 @@ export default function App() {
   const utxoArray = [];
   let balance = 0;
 
-  // get all utxos
-  const getAllUtxos = async (data) => {
-    Promise.all(
-      Object.keys(data).map((address) => {
-        return new Promise((resolve) => {
-          fetch(
-            `https://blockstream.info/testnet/api/address/${address}/utxo`,
-          ).then((response) => {
-            return new Promise(() => {
-              response.json().then((transactions) => {
-                if (transactions.length !== 0) {
-                  // setting total balance
-                  transactions.map((transaction) => {
-                    console.log('transaction--', transaction.value);
-                    console.log('balance--', balance);
-
-                    utxoArray.push({
-                      ...transaction,
-                      derivePath: data[address].derivePath,
-                    });
-                    balance += transaction.value;
-                  });
-                  setBitcoinBalance(balance);
-                }
-                resolve();
-              });
-            });
-          });
-        });
-      }),
-    ).then(() => {
-      setUtxos(utxoArray);
-    });
-  };
-
   // get bitcoin data from async
   const getAsyncBitcoinData = async () => {
     setLoading(true);
@@ -78,27 +44,33 @@ export default function App() {
       const changedAddressAsync = await AsyncStorage.getItem('change_address');
       setChangeAddress(changedAddressAsync);
       //check if has existing bitcoin data on async
-      console.log('data', parsedUsedAndUnused);
       if (data) {
-        getAllUtxos(parsedUsedAndUnused);
+        // get utxos
+        await generateUtxos(
+          parsedUsedAndUnused,
+          setBitcoinBalance,
+          setUtxos,
+          utxoArray,
+          balance,
+        );
+
         // check if all list is used or not
-        const allArray = [];
-        console.log('here', parsedUsedAndUnused);
+        const usedAddress = [];
         Object.keys(parsedUsedAndUnused).map((el) => {
           if (parsedUsedAndUnused[el].is_used) {
-            allArray.push(true);
+            usedAddress.push(true);
           }
         });
 
-        if (allArray.length === Object.keys(parsedUsedAndUnused).length) {
-          console.log('has no unused data async generate more 10');
+        if (usedAddress.length === Object.keys(parsedUsedAndUnused).length) {
+          // has no unused data navigate to login screen
           setIsLoggedIn(false);
           return;
         }
-        if (allArray.length !== Object.keys(parsedUsedAndUnused).length) {
+        if (usedAddress.length !== Object.keys(parsedUsedAndUnused).length) {
           // login with the new address (next address)
           if (parsedUsedAndUnused[parsedAddress.address].is_used) {
-            console.log('change to next address', allArray.length);
+            // change to next address
             Object.keys(parsedUsedAndUnused).map((el) => {
               if (!parsedUsedAndUnused[el].is_used) {
                 setStoredBitcoinData({
@@ -118,7 +90,6 @@ export default function App() {
 
           // login with the same address
           if (!parsedUsedAndUnused[parsedAddress.address].is_used) {
-            console.log('parsedAddress', parsedAddress.address);
             setUsedAndUnusedData(parsedUsedAndUnused);
             setStoredBitcoinData({
               address: parsedAddress.address,
@@ -137,7 +108,6 @@ export default function App() {
 
       //check if it don't have existing bitcoin data on async
       if (!data) {
-        console.log('here111');
         setIsLoggedIn(false);
       }
       setLoading(false);
@@ -186,7 +156,6 @@ export default function App() {
     <Spinner />
   ) : (
     <>
-      {console.log('isLoggedIn', isLoggedIn)}
       {renderGlobalLoader()}
       <NavigationContainer>
         <Stack.Navigator screenOptions={{headerShown: false}}>

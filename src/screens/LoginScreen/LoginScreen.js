@@ -5,15 +5,14 @@ import styles from './styles';
 import {LOGO_URL} from '../../api/bitcoin/constant';
 import CustomButton from '../../Components/CustomButton/CustomButton';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-// import generateTestnetAddressAndPrivateKey from '../../Helper/generateTestnetAddress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const bitcoin = require('bitcoinjs-lib');
+import generateAddress from '../../Helper/generateAddress';
 const bip39 = require('bip39');
+const bitcoin = require('bitcoinjs-lib');
 
 export default function LoginScreen() {
   const ref = useRef({
-    currentNo: 10,
+    currentNo: 5,
     generatedAddress: [],
   });
   const {
@@ -26,24 +25,12 @@ export default function LoginScreen() {
 
   const [mnemonic, setMnemonic] = useState('');
 
-  const getAddress = (data) => {
-    console.log('data', data);
-    return {
-      address: bitcoin.payments.p2pkh({
-        pubkey: data.publicKey,
-        network: bitcoin.networks.testnet,
-      }).address,
-    };
-  };
-
   const generateTestnetAddressAndPrivateKey = async (
     currentNo,
     mnemonicPhrase,
   ) => {
     ref.current.generatedAddress = [];
     const addressAndPrivatekey = [];
-    const apiAddressResponse = [];
-    const processedUsedAndUnusedAddress = {};
     const seed = bip39.mnemonicToSeedSync(mnemonicPhrase);
     const root = bitcoin.bip32.fromSeed(seed, bitcoin.networks.testnet);
     const branch = root
@@ -51,21 +38,27 @@ export default function LoginScreen() {
       .deriveHardened(1)
       .deriveHardened(0)
       .derive(0);
+
     // generate one change address
     const changeAddressBranch = root
       .deriveHardened(44)
       .deriveHardened(1)
       .deriveHardened(0)
       .derive(1);
-    const changeAddress = getAddress(changeAddressBranch.derive(0));
+    const changeAddress = generateAddress(changeAddressBranch.derive(0));
     // generate one change address
 
-    // generate 10 address
+    // generate 5 testnet address
     for (let i = 0; i < currentNo; ++i) {
-      addressAndPrivatekey.push(getAddress(branch.derive(i)));
-      ref.current.generatedAddress.push(getAddress(branch.derive(i)));
+      addressAndPrivatekey.push(generateAddress(branch.derive(i)));
+      ref.current.generatedAddress.push(generateAddress(branch.derive(i)));
     }
+    processBitcoinAddress(addressAndPrivatekey, changeAddress);
+  };
 
+  const processBitcoinAddress = async (addressAndPrivatekey, changeAddress) => {
+    const apiAddressResponse = [];
+    const processedUsedAndUnusedAddress = {};
     // --------- using promise ------------
     // getting data of all generated address
     Promise.all(
@@ -76,8 +69,9 @@ export default function LoginScreen() {
           ).then((response) => {
             return new Promise(() => {
               response.json().then((data) => {
-                console.log(data);
-                apiAddressResponse.push(data);
+                if (data.address) {
+                  apiAddressResponse.push(data);
+                }
                 resolve();
               });
             });
@@ -128,8 +122,6 @@ export default function LoginScreen() {
           JSON.stringify(processedUsedAndUnusedAddress),
         );
       });
-
-      //check
 
       // check if has all used address or not
       const usedAddress = [];

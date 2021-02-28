@@ -45,7 +45,6 @@ export default function HomeScreen({navigation}) {
 
   // get bitcoin data by bitcoin address
   const getBitcoinData = async (address) => {
-    console.log('add', address);
     try {
       const data = await getBitcoinDetails(address);
       setBitcoinData(data);
@@ -90,10 +89,6 @@ export default function HomeScreen({navigation}) {
     const root = bitcoin.bip32.fromSeed(seed, bitcoin.networks.testnet);
     setMnemonicRoot(root);
   }, []);
-
-  useEffect(() => {
-    console.log('utxos', utxos);
-  }, [utxos]);
 
   return (
     <>

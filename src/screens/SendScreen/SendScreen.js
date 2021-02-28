@@ -27,8 +27,6 @@ export default function SendScreen({route}) {
   const [showErrorMsg, setShowErrorMsg] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  console.log('storedBitcoinData', storedBitcoinData);
-
   // check if receiver testnet address is valid or not
   const checkTestAddress = async (testnetAddress) => {
     try {
@@ -61,9 +59,6 @@ export default function SendScreen({route}) {
     });
     let {inputs, outputs, fee} = coinSelect(formattedUTXO, targets, feePerByte);
 
-    console.log('formattedUTXO', inputs);
-    console.log('formattedUTXO', fee);
-
     const data = inputs.map((input, index) => {
       if (input.confirmed) {
         return true;
@@ -71,7 +66,6 @@ export default function SendScreen({route}) {
         return false;
       }
     });
-    console.log('data', data);
     if (data.includes(false)) {
       return {
         success: false,
@@ -163,7 +157,6 @@ export default function SendScreen({route}) {
 
         if (success) {
           const transactionBuilder = new bitcoin.TransactionBuilder(testnet);
-          console.log('input', inputs);
 
           inputs.forEach((input) =>
             transactionBuilder.addInput(input.txId, input.vout),
@@ -176,7 +169,6 @@ export default function SendScreen({route}) {
 
             transactionBuilder.addOutput(output.address, output.value);
           });
-          console.log('inputs', inputs);
 
           inputs.map((el, index) => {
             const keyPair = bitcoin.ECPair.fromWIF(
