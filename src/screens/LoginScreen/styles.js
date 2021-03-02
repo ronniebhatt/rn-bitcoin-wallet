@@ -30,12 +30,21 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   textInput: {
-    borderWidth: 1,
+    borderWidth: 0.5,
     width: '100%',
     marginVertical: 10,
-    height: 60,
+    height: 120,
     borderRadius: 5,
-    paddingLeft: 10,
+    paddingHorizontal: 10,
+    fontSize: 20,
+    borderColor: 'rgba(0,0,0,0.7)',
+  },
+  mainText: {
+    textAlign: 'center',
+    fontSize: 18,
+    marginVertical: 20,
+    opacity: 0.8,
+    textTransform: 'uppercase',
   },
 });
 

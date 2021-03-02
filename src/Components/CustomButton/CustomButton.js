@@ -23,8 +23,8 @@ const styles = StyleSheet.create({
   btn: {
     backgroundColor: '#265C7E',
     width: width - 40,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 15,
+    borderRadius: 40,
   },
   btnText: {
     textAlign: 'center',

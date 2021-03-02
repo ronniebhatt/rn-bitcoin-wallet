@@ -8,10 +8,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   topContainer: {
-    height: height * 0.47,
+    height: height * 0.5,
   },
   bottomContainer: {
-    height: height * 0.53,
+    height: '100%',
     borderTopEndRadius: 20,
     borderTopStartRadius: 20,
     backgroundColor: '#265C7E',
@@ -43,12 +43,12 @@ const styles = StyleSheet.create({
   },
   balanceText: {
     textAlign: 'center',
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '600',
   },
   btnAddressText: {
     textAlign: 'center',
-    fontSize: 14,
+    fontSize: 16,
     paddingTop: 20,
   },
   transactionText: {

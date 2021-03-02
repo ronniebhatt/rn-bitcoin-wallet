@@ -195,13 +195,12 @@ export default function LoginScreen() {
         />
 
         <View style={styles.textInputOuterContainer}>
-          <Text style={{textAlign: 'center', fontSize: 18, marginVertical: 10}}>
-            Enter 12 word Mnemonic Phrase
-          </Text>
+          <Text style={styles.mainText}>Enter 12 word Mnemonic Phrase</Text>
           <View style={styles.textInputContainer}>
             <TextInput
               placeholder="Enter Mnemonic Phrase"
               style={styles.textInput}
+              multiline
               value={mnemonic}
               onChangeText={(text) => setMnemonic(text)}
             />
@@ -209,7 +208,7 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.btnContainer}>
-          <CustomButton text="LOGIN" handleBtnClick={handleLoginBtn} />
+          <CustomButton text="IMPORT" handleBtnClick={handleLoginBtn} />
         </View>
       </KeyboardAwareScrollView>
     </SafeAreaView>
