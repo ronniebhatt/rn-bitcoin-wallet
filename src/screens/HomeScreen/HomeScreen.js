@@ -127,16 +127,16 @@ export default function HomeScreen({navigation}) {
                 <View style={{marginVertical: 20}}>
                   <CustomButton
                     text="SEND"
-                    handleBtnClick={() =>
-                      navigation.navigate('SendScreen', {
-                        bitcoinData,
-                      })
-                    }
+                    handleBtnClick={() => navigation.navigate('SendScreen')}
                   />
                 </View>
                 <CustomButton
                   text="RECEIVE"
-                  handleBtnClick={() => navigation.navigate('ReceiveScreen')}
+                  handleBtnClick={() =>
+                    navigation.navigate('ReceiveScreen', {
+                      bitcoinData,
+                    })
+                  }
                 />
               </View>
             </View>

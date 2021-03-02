@@ -11,7 +11,9 @@ import ReceiveScreen from './src/screens/ReceiveScreen/ReceiveScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Spinner from './src/Components/Spinner/Spinner';
 import generateUtxos from './src/Helper/generateUtxos';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 
+AntDesign.loadFont();
 const Stack = createStackNavigator();
 
 export default function App() {
