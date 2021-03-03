@@ -29,6 +29,9 @@ export default function HomeScreen({navigation}) {
     setBitcoinBalance,
     setUtxos,
     usedAndUnusedData,
+    tx,
+    usedAndUnusedChangeData,
+    setUsedAndUnusedData,
   } = useContext(Contexts);
   const [refreshing, setRefreshing] = useState(false);
   const utxoArray = [];
@@ -93,6 +96,72 @@ export default function HomeScreen({navigation}) {
     setIsLoggedIn(false);
   };
 
+  useEffect(() => {
+    const callFunction = async () => {
+      console.log('normal----', usedAndUnusedData);
+      console.log('usedAndUnusedChangeData----', usedAndUnusedChangeData);
+
+      if (usedAndUnusedData) {
+        await generateUtxos(
+          usedAndUnusedData,
+          setBitcoinBalance,
+          setUtxos,
+          utxoArray,
+          balance,
+        );
+      }
+    };
+    callFunction();
+  }, [usedAndUnusedData, usedAndUnusedChangeData]);
+
+  useEffect(() => {
+    console.log('bitcoinData----', bitcoinData, usedAndUnusedData);
+
+    if (bitcoinData && bitcoinData.txs.length !== 0) {
+      // change to next unused addresss
+      console.log('change to next unused addresss', usedAndUnusedData);
+
+      const newUsedAndUnusedData = {...usedAndUnusedData};
+      console.log('newUsedAndUnusedData', newUsedAndUnusedData);
+      newUsedAndUnusedData[bitcoinData.address].is_used = true;
+      setUsedAndUnusedData(newUsedAndUnusedData);
+      AsyncStorage.setItem(
+        'usedUnusedAddress',
+        JSON.stringify(newUsedAndUnusedData),
+      );
+
+      const usedAddress = [];
+      Object.keys(usedAndUnusedData).map((el) => {
+        if (usedAndUnusedData[el].is_used) {
+          usedAddress.push(true);
+        }
+      });
+      if (usedAddress.length === Object.keys(usedAndUnusedData).length) {
+        // has no unused data navigate to login screen
+        setIsLoggedIn(false);
+        return;
+      }
+
+      if (usedAddress.length !== Object.keys(usedAndUnusedData).length) {
+        // login with the new address (next address)
+        // change to next address
+        Object.keys(usedAndUnusedData).map((el) => {
+          if (!usedAndUnusedData[el].is_used) {
+            setStoredBitcoinData({
+              address: usedAndUnusedData[el].address,
+            });
+            AsyncStorage.setItem(
+              'bitcoin_async_data',
+              JSON.stringify({
+                address: usedAndUnusedData[el].address,
+              }),
+            );
+          }
+        });
+      }
+    }
+  }, [bitcoinData]);
+
   return (
     <>
       {!bitcoinData && <Spinner />}
@@ -144,7 +213,7 @@ export default function HomeScreen({navigation}) {
             {/* TRANSACTION LIST CONTAINER */}
             <View style={styles.bottomContainer}>
               <Text style={styles.transactionText}>Transactions</Text>
-              <Text style={{color: '#fff', textAlign: 'center'}}>
+              <Text style={{color: '#fff', textAlign: 'center', fontSize: 12}}>
                 Pull to refresh
               </Text>
 
@@ -156,36 +225,31 @@ export default function HomeScreen({navigation}) {
                     onRefresh={onRefresh}
                   />
                 }
-                data={bitcoinData.txs}
+                data={tx}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={() => (
                   <View style={styles.emptyTransactionContainer}>
                     <Text style={{color: '#fff'}}>No Transactions</Text>
                   </View>
                 )}
+                contentContainerStyle={{paddingBottom: 750}}
                 renderItem={({item}) => {
                   const debitedArray = [];
                   const creditedArray = [];
 
                   // setting debited transaction to debitedArray
                   item.inputs.map((input) => {
-                    if (input.addresses.includes(storedBitcoinData.address)) {
-                      debitedArray.push(input);
-                    }
+                    debitedArray.push(input);
                   });
 
                   // setting credited transaction to creditedArray
                   item.outputs.map((output) => {
-                    if (output.addresses.includes(storedBitcoinData.address)) {
-                      creditedArray.push(output);
-                    }
+                    creditedArray.push(output);
                   });
 
                   // setting sender transaction to creditedArray
                   item.outputs.map((output) => {
-                    if (!output.addresses.includes(storedBitcoinData.address)) {
-                      senderAddress[item.hash] = output;
-                    }
+                    senderAddress[item.hash] = output;
                   });
                   return (
                     <>
@@ -197,6 +261,7 @@ export default function HomeScreen({navigation}) {
                             transactionID={item.hash}
                             amount={credit.value}
                             isCredited={true}
+                            confirmations={item.confirmations}
                           />
                         );
                       })}
@@ -216,6 +281,7 @@ export default function HomeScreen({navigation}) {
                             transactionID={item.hash}
                             amount={totalDeducted}
                             isCredited={false}
+                            confirmations={item.confirmations}
                           />
                         );
                       })}

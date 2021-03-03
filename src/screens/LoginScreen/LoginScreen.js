@@ -13,7 +13,9 @@ const bitcoin = require('bitcoinjs-lib');
 export default function LoginScreen() {
   const ref = useRef({
     currentNo: 10,
+    currentChangeNo: 10,
     generatedAddress: [],
+    generatedChangeAddress: [],
   });
   const {
     setStoredBitcoinData,
@@ -22,6 +24,7 @@ export default function LoginScreen() {
     setUsedAndUnusedData,
     setChangeAddress,
     setMnemonicRoot,
+    setUsedAndUnusedChangeData,
   } = useContext(Contexts);
 
   const [mnemonic, setMnemonic] = useState('');
@@ -32,6 +35,7 @@ export default function LoginScreen() {
   ) => {
     ref.current.generatedAddress = [];
     const addressAndPrivatekey = [];
+    const changeAddressAndPrivatekey = [];
     const valid = bip39.validateMnemonic(mnemonicPhrase);
 
     if (!valid) {
@@ -56,20 +60,40 @@ export default function LoginScreen() {
       .deriveHardened(1)
       .deriveHardened(0)
       .derive(1);
-    const changeAddress = generateAddress(changeAddressBranch.derive(0));
-    // generate one change address
+
+    // ---- generate 5 change address ---
+    for (let i = 0; i < currentNo; ++i) {
+      changeAddressAndPrivatekey.push(
+        generateAddress(changeAddressBranch.derive(i)),
+      );
+      ref.current.generatedChangeAddress.push(
+        generateAddress(changeAddressBranch.derive(i)),
+      );
+    }
+    // ---- generate 5 change address ---
 
     // generate 5 testnet address
     for (let i = 0; i < currentNo; ++i) {
       addressAndPrivatekey.push(generateAddress(branch.derive(i)));
       ref.current.generatedAddress.push(generateAddress(branch.derive(i)));
     }
-    processBitcoinAddress(addressAndPrivatekey, changeAddress);
+
+    const regularAddressComplete = processBitcoinAddress(addressAndPrivatekey);
+    const ChangeAddressComplete = processBitcoinChangeAddress(
+      changeAddressAndPrivatekey,
+    );
+
+    if (regularAddressComplete && ChangeAddressComplete) {
+      setIsLoggedIn(true);
+      handleGlobalSpinner(false);
+    }
   };
 
-  const processBitcoinAddress = async (addressAndPrivatekey, changeAddress) => {
+  const processBitcoinAddress = async (addressAndPrivatekey) => {
     const apiAddressResponse = [];
     const processedUsedAndUnusedAddress = {};
+    let bitcoinAddress = null;
+
     // --------- using promise ------------
     // getting data of all generated address
     Promise.all(
@@ -77,7 +101,6 @@ export default function LoginScreen() {
         return new Promise((resolve) => {
           fetch(
             `https://testnet-api.smartbit.com.au/v1/blockchain/address/${el.address}`,
-            // `https://api.blockcypher.com/v1/btc/test3/addrs/${el.address}/full?limit=50&token=a657369943a148eba820eb667fcd5c26`,
           ).then((response) => {
             return new Promise(() => {
               response.json().then((data) => {
@@ -122,15 +145,6 @@ export default function LoginScreen() {
           };
         }
 
-        // add change address
-        processedUsedAndUnusedAddress[changeAddress.address] = {
-          is_used: true,
-          address: changeAddress.address,
-          derivePath: "m/44'/1'/0'/1/0",
-        };
-        await AsyncStorage.setItem('change_address', changeAddress.address);
-        setChangeAddress(changeAddress.address);
-
         // storing all processed data to context and asyncStorage
         setUsedAndUnusedData(processedUsedAndUnusedAddress);
         await AsyncStorage.setItem(
@@ -167,13 +181,123 @@ export default function LoginScreen() {
                 address: processedUsedAndUnusedAddress[el].address,
               }),
             );
-            setIsLoggedIn(true);
-            handleGlobalSpinner(false);
+            bitcoinAddress = processedUsedAndUnusedAddress[el].address;
+          }
+        });
+      }
+    });
+    if (bitcoinAddress) {
+      console.log('here');
+      return true;
+    }
+    // --------- using promise ------------
+  };
+
+  const processBitcoinChangeAddress = async (changeAddress) => {
+    const apiAddressResponse = [];
+    const processedUsedAndUnusedAddress = {};
+    let bitcoinAddress = null;
+
+    // --------- using promise ------------
+    // getting data of all generated address
+    Promise.all(
+      changeAddress.map((el) => {
+        return new Promise((resolve) => {
+          fetch(
+            `https://testnet-api.smartbit.com.au/v1/blockchain/address/${el.address}`,
+          ).then((response) => {
+            return new Promise(() => {
+              response.json().then((data) => {
+                if (data.address) {
+                  apiAddressResponse.push(data);
+                }
+                resolve();
+              });
+            });
+          });
+        });
+      }),
+    ).then(() => {
+      // separate used and unused address
+      changeAddress.map(async (el, i) => {
+        if (
+          el.address &&
+          (el.address =
+            apiAddressResponse[i].address.address &&
+            !apiAddressResponse[i].address.transactions)
+        ) {
+          // getting all unused address and storing to obj
+          processedUsedAndUnusedAddress[
+            apiAddressResponse[i].address.address
+          ] = {
+            is_used: false,
+            address: apiAddressResponse[i].address.address,
+            derivePath: `m/44'/1'/0'/1/${ref.current.generatedChangeAddress.findIndex(
+              (x) => x.address === apiAddressResponse[i].address.address,
+            )}`,
+          };
+        } else {
+          // getting all used address and storing to obj
+          processedUsedAndUnusedAddress[
+            apiAddressResponse[i].address.address
+          ] = {
+            is_used: true,
+            address: apiAddressResponse[i].address.address,
+            derivePath: `m/44'/1'/0'/1/${ref.current.generatedChangeAddress.findIndex(
+              (x) => x.address === apiAddressResponse[i].address.address,
+            )}`,
+          };
+        }
+
+        // storing all processed data to context and asyncStorage
+        setUsedAndUnusedChangeData(processedUsedAndUnusedAddress);
+        await AsyncStorage.setItem(
+          'usedUnusedChangeAddress',
+          JSON.stringify(processedUsedAndUnusedAddress),
+        );
+      });
+
+      // check if has all used address or not
+      const usedAddress = [];
+      Object.keys(processedUsedAndUnusedAddress).map((el) => {
+        if (processedUsedAndUnusedAddress[el].is_used) {
+          usedAddress.push(true);
+        }
+      });
+
+      if (
+        usedAddress.length === Object.keys(processedUsedAndUnusedAddress).length
+      ) {
+        // has no unused data generate more 10 address
+        usedAddress.splice(0, usedAddress.length);
+        ref.current.currentChangeNo += 10;
+        generateTestnetAddressAndPrivateKey(
+          ref.current.currentChangeNo,
+          mnemonic,
+        );
+      } else {
+        // has some unused data
+        Object.keys(processedUsedAndUnusedAddress).map((el) => {
+          if (!processedUsedAndUnusedAddress[el].is_used) {
+            setChangeAddress(processedUsedAndUnusedAddress[el].address);
+
+            AsyncStorage.setItem(
+              'change_address',
+              JSON.stringify({
+                address: processedUsedAndUnusedAddress[el].address,
+              }),
+            );
+            bitcoinAddress = processedUsedAndUnusedAddress[el].address;
           }
         });
       }
     });
     // --------- using promise ------------
+    if (bitcoinAddress) {
+      console.log('here2');
+
+      return true;
+    }
   };
 
   // handle login btn pressed

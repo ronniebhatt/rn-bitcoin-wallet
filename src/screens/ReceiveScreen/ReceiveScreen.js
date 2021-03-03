@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, ToastAndroid} from 'react-native';
+import {View, ToastAndroid, Platform, Alert} from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import CustomButton from '../../Components/CustomButton/CustomButton';
 import Clipboard from '@react-native-community/clipboard';
@@ -9,7 +9,11 @@ export default function ReceiveScreen({route}) {
 
   const handleCopyBtn = () => {
     Clipboard.setString(bitcoinData.address);
-    ToastAndroid.show('Testnet Address Copied', ToastAndroid.SHORT);
+    if (Platform.OS === 'android') {
+      ToastAndroid.show('Testnet Address Copied', ToastAndroid.SHORT);
+    } else {
+      Alert.alert('Testnet Address Copied');
+    }
   };
 
   return (

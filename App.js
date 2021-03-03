@@ -10,7 +10,6 @@ import Contexts from './src/Contexts/Contexts';
 import ReceiveScreen from './src/screens/ReceiveScreen/ReceiveScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Spinner from './src/Components/Spinner/Spinner';
-import generateUtxos from './src/Helper/generateUtxos';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 
 AntDesign.loadFont();
@@ -23,15 +22,12 @@ export default function App() {
     isLoggedIn,
     setIsLoggedIn,
     setStoredBitcoinData,
-    setUtxos,
-    setBitcoinBalance,
     setUsedAndUnusedData,
     setChangeAddress,
     setMnemonicRoot,
+    setUsedAndUnusedChangeData,
   } = useContext(Contexts);
   const [loading, setLoading] = useState(false);
-  const utxoArray = [];
-  let balance = 0;
 
   // get bitcoin data from async
   const getAsyncBitcoinData = async () => {
@@ -42,77 +38,28 @@ export default function App() {
       const parsedAddress = JSON.parse(data);
       // get usedUnusedAddress object from async
       const usedUnused = await AsyncStorage.getItem('usedUnusedAddress');
-      const parsedUsedAndUnused = JSON.parse(usedUnused);
+      setUsedAndUnusedData(JSON.parse(usedUnused));
+
+      // get used unused change object from async
+      const usedUnusedChange = await AsyncStorage.getItem(
+        'usedUnusedChangeAddress',
+      );
+      setUsedAndUnusedChangeData(JSON.parse(usedUnusedChange));
       // get changeAddress from from async
       const changedAddressAsync = await AsyncStorage.getItem('change_address');
-      setChangeAddress(changedAddressAsync);
+
+      setChangeAddress(JSON.parse(changedAddressAsync));
       // set mnemonic root
       const mnemonicRoot = await AsyncStorage.getItem('mnemonic_root');
       setMnemonicRoot(mnemonicRoot);
 
       //check if has existing bitcoin data on async
       if (data) {
-        // get utxos
-
-        await generateUtxos(
-          parsedUsedAndUnused,
-          setBitcoinBalance,
-          setUtxos,
-          utxoArray,
-          balance,
-        );
-
-        // check if all list is used or not
-        const usedAddress = [];
-        Object.keys(parsedUsedAndUnused).map((el) => {
-          if (parsedUsedAndUnused[el].is_used) {
-            usedAddress.push(true);
-          }
+        setStoredBitcoinData({
+          address: parsedAddress.address,
         });
-
-        if (usedAddress.length === Object.keys(parsedUsedAndUnused).length) {
-          // has no unused data navigate to login screen
-          setIsLoggedIn(false);
-          return;
-        }
-        if (usedAddress.length !== Object.keys(parsedUsedAndUnused).length) {
-          // login with the new address (next address)
-          if (parsedUsedAndUnused[parsedAddress.address].is_used) {
-            // change to next address
-            Object.keys(parsedUsedAndUnused).map((el) => {
-              if (!parsedUsedAndUnused[el].is_used) {
-                setStoredBitcoinData({
-                  address: parsedUsedAndUnused[el].address,
-                });
-                AsyncStorage.setItem(
-                  'bitcoin_async_data',
-                  JSON.stringify({
-                    address: parsedUsedAndUnused[el].address,
-                  }),
-                );
-                setUsedAndUnusedData(parsedUsedAndUnused);
-                setIsLoggedIn(true);
-                handleGlobalSpinner(false);
-              }
-            });
-          }
-
-          // login with the same address
-          if (!parsedUsedAndUnused[parsedAddress.address].is_used) {
-            setUsedAndUnusedData(parsedUsedAndUnused);
-            setStoredBitcoinData({
-              address: parsedAddress.address,
-            });
-            AsyncStorage.setItem(
-              'bitcoin_async_data',
-              JSON.stringify({
-                address: parsedAddress.address,
-              }),
-            );
-            setIsLoggedIn(true);
-            handleGlobalSpinner(false);
-          }
-        }
+        setIsLoggedIn(true);
+        handleGlobalSpinner(false);
       }
 
       //check if it don't have existing bitcoin data on async

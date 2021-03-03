@@ -7,8 +7,10 @@ const AppStorage = ({children}) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mnemonicWord, setMnemonicWord] = useState('');
   const [usedAndUnusedData, setUsedAndUnusedData] = useState(null);
+  const [usedAndUnusedChangeData, setUsedAndUnusedChangeData] = useState(null);
   const [bitcoinBalance, setBitcoinBalance] = useState(0);
   const [utxos, setUtxos] = useState([]);
+  const [tx, setTx] = useState([]);
   const [mnemonicRoot, setMnemonicRoot] = useState(null);
   const [changeAddress, setChangeAddress] = useState('');
 
@@ -35,6 +37,10 @@ const AppStorage = ({children}) => {
     setMnemonicRoot,
     changeAddress,
     setChangeAddress,
+    tx,
+    setTx,
+    usedAndUnusedChangeData,
+    setUsedAndUnusedChangeData,
   };
 
   return (

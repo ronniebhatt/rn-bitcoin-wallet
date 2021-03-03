@@ -6,7 +6,6 @@ import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import broadcastTransaction from '../../api/bitcoin/broadcastTransaction';
 import CustomButton from '../../Components/CustomButton/CustomButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import generateAddress from '../../Helper/generateAddress';
 const bitcoin = require('bitcoinjs-lib');
 const coinSelect = require('coinselect');
 const testnet = bitcoin.networks.testnet;
@@ -18,10 +17,12 @@ export default function SendScreen() {
   const {
     handleGlobalSpinner,
     utxos,
-    usedAndUnusedData,
     mnemonicRoot,
-    setUsedAndUnusedData,
     changeAddress,
+    usedAndUnusedChangeData,
+    setUsedAndUnusedChangeData,
+    setIsLoggedIn,
+    setChangeAddress,
   } = useContext(Contexts);
 
   // check if receiver testnet address is valid or not
@@ -90,7 +91,7 @@ export default function SendScreen() {
   };
 
   // broadcast Transaction
-  const broadcastRawTransaction = async (hex, inputAddress) => {
+  const broadcastRawTransaction = async (hex) => {
     const postbody = {hex: hex};
     try {
       const {success, error} = await broadcastTransaction(postbody);
@@ -98,15 +99,46 @@ export default function SendScreen() {
       if (success) {
         handleGlobalSpinner(false);
         Alert.alert('ALERT', 'Transaction sent Successfully');
-        const newUsedAndUnusedData = {...usedAndUnusedData};
-        inputAddress.map((el) => {
-          newUsedAndUnusedData[el.address].is_used = true;
-        });
-        setUsedAndUnusedData(newUsedAndUnusedData);
+
+        // change to next change address
+
+        const newUsedAndUnusedData = {...usedAndUnusedChangeData};
+        newUsedAndUnusedData[changeAddress.address].is_used = true;
+        setUsedAndUnusedChangeData(newUsedAndUnusedData);
         await AsyncStorage.setItem(
-          'usedUnusedAddress',
+          'usedUnusedChangeAddress',
           JSON.stringify(newUsedAndUnusedData),
         );
+
+        const usedAddress = [];
+        Object.keys(newUsedAndUnusedData).map((el) => {
+          if (newUsedAndUnusedData[el].is_used) {
+            usedAddress.push(true);
+          }
+        });
+        if (usedAddress.length === Object.keys(newUsedAndUnusedData).length) {
+          // has no unused data navigate to login screen
+          setIsLoggedIn(false);
+          return;
+        }
+
+        if (usedAddress.length !== Object.keys(newUsedAndUnusedData).length) {
+          // login with the new address (next address)
+          // change to next address
+          Object.keys(newUsedAndUnusedData).map((el) => {
+            if (!newUsedAndUnusedData[el].is_used) {
+              setChangeAddress({
+                address: newUsedAndUnusedData[el].address,
+              });
+              AsyncStorage.setItem(
+                'change_address',
+                JSON.stringify({
+                  address: newUsedAndUnusedData[el].address,
+                }),
+              );
+            }
+          });
+        }
       }
       if (!success) {
         handleGlobalSpinner(false);
@@ -156,20 +188,18 @@ export default function SendScreen() {
           inputs.forEach((input) =>
             transactionBuilder.addInput(input.txId, input.vout),
           );
-
           outputs.forEach((output) => {
             if (!output.address) {
-              output.address = changeAddress;
+              output.address = changeAddress.address;
             }
 
             transactionBuilder.addOutput(output.address, output.value);
           });
+
           const seed = bip39.mnemonicToSeedSync(mnemonicRoot);
           const root = bitcoin.bip32.fromSeed(seed, bitcoin.networks.testnet);
 
-          const inputAddress = [];
           inputs.map((el, index) => {
-            inputAddress.push(generateAddress(root.derivePath(el.derivePath)));
             const keyPair = bitcoin.ECPair.fromWIF(
               root.derivePath(el.derivePath).toWIF(),
               testnet,
@@ -180,7 +210,7 @@ export default function SendScreen() {
           const transaction = transactionBuilder.build();
           const transactionHex = transaction.toHex();
           if (transactionHex) {
-            broadcastRawTransaction(transactionHex, inputAddress);
+            broadcastRawTransaction(transactionHex);
           }
         }
         if (!success) {
