@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
     height: 50,
     marginVertical: 20,
     paddingLeft: 20,
-    borderRadius: 60,
+    borderRadius: 10,
   },
   logo: {
     width: 60,

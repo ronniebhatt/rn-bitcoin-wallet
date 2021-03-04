@@ -32,9 +32,14 @@ export default function HomeScreen({navigation}) {
     tx,
     usedAndUnusedChangeData,
     setUsedAndUnusedData,
+    setRegularAddressUtxo,
+    setChangeAddressUtxo,
+    regularAddressUtxo,
+    changeAddressUtxo,
   } = useContext(Contexts);
   const [refreshing, setRefreshing] = useState(false);
   const utxoArray = [];
+  const changeUtxoArray = [];
   let balance = 0;
 
   let senderAddress = {};
@@ -44,13 +49,6 @@ export default function HomeScreen({navigation}) {
     if (storedBitcoinData) {
       setRefreshing(true);
       getBitcoinData(storedBitcoinData.address);
-      await generateUtxos(
-        usedAndUnusedData,
-        setBitcoinBalance,
-        setUtxos,
-        utxoArray,
-        balance,
-      );
       setRefreshing(false);
     }
   };
@@ -89,30 +87,16 @@ export default function HomeScreen({navigation}) {
     getAsyncBitcoinData();
   }, []);
 
+  useEffect(() => {
+    getAllUtoxos();
+  }, [usedAndUnusedData, usedAndUnusedChangeData]);
+
   const handleLogout = async () => {
     setBitcoinBalance(0);
     setUtxos([]);
     await AsyncStorage.clear();
     setIsLoggedIn(false);
   };
-
-  useEffect(() => {
-    const callFunction = async () => {
-      console.log('normal----', usedAndUnusedData);
-      console.log('usedAndUnusedChangeData----', usedAndUnusedChangeData);
-
-      if (usedAndUnusedData) {
-        await generateUtxos(
-          usedAndUnusedData,
-          setBitcoinBalance,
-          setUtxos,
-          utxoArray,
-          balance,
-        );
-      }
-    };
-    callFunction();
-  }, [usedAndUnusedData, usedAndUnusedChangeData]);
 
   useEffect(() => {
     console.log('bitcoinData----', bitcoinData, usedAndUnusedData);
@@ -161,6 +145,27 @@ export default function HomeScreen({navigation}) {
       }
     }
   }, [bitcoinData]);
+
+  const getAllUtoxos = async () => {
+    await generateUtxos(usedAndUnusedData, setRegularAddressUtxo, utxoArray);
+    await generateUtxos(
+      usedAndUnusedChangeData,
+      setChangeAddressUtxo,
+      changeUtxoArray,
+    );
+  };
+
+  useEffect(() => {
+    if (regularAddressUtxo.length !== 0 && changeAddressUtxo.length !== 0) {
+      const array = regularAddressUtxo.concat(changeAddressUtxo);
+      array.map((el) => {
+        balance += el.value;
+      });
+      setBitcoinBalance(balance);
+      setUtxos(regularAddressUtxo.concat(changeAddressUtxo));
+      console.log('---l--', regularAddressUtxo.concat(changeAddressUtxo));
+    }
+  }, [regularAddressUtxo, changeAddressUtxo]);
 
   return (
     <>

@@ -3,7 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import HomeScreen from './src/screens/HomeScreen/HomeScreen';
 import SendScreen from './src/screens/SendScreen/SendScreen';
-import LoginScreen from './src/screens/LoginScreen/LoginScreen';
+import MnemonicScreen from './src/screens/LoginScreen/MnemonicScreen';
 import {ActivityIndicator, Text, View, StyleSheet} from 'react-native';
 import Modal from 'react-native-modal';
 import Contexts from './src/Contexts/Contexts';
@@ -11,6 +11,7 @@ import ReceiveScreen from './src/screens/ReceiveScreen/ReceiveScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Spinner from './src/Components/Spinner/Spinner';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import LoginScreen from './src/screens/LoginScreen/LoginScreen';
 
 AntDesign.loadFont();
 const Stack = createStackNavigator();
@@ -98,7 +99,10 @@ export default function App() {
   );
 
   const loadLoginNavigator = () => (
-    <Stack.Screen name="Login" component={LoginScreen} />
+    <>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="MnemonicScreen" component={MnemonicScreen} />
+    </>
   );
 
   const loadLoggedInNavigator = () => (

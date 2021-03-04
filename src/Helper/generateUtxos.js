@@ -1,10 +1,4 @@
-const generateUtxos = async (
-  data,
-  setBitcoinBalance,
-  setUtxos,
-  utxoArray,
-  balance,
-) => {
+const generateUtxos = async (data, setUtxos, utxoArray) => {
   Promise.all(
     Object.keys(data).map((address) => {
       return new Promise((resolve) => {
@@ -20,9 +14,7 @@ const generateUtxos = async (
                     ...transaction,
                     derivePath: data[address].derivePath,
                   });
-                  balance += transaction.value;
                 });
-                setBitcoinBalance(balance);
               }
               resolve();
             });

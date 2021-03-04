@@ -1,4 +1,4 @@
-import React, {useState, useContext} from 'react';
+import React, {useState, useContext, useEffect} from 'react';
 import {View, SafeAreaView, TextInput, Image, Alert} from 'react-native';
 import styles from './styles';
 import Contexts from '../../Contexts/Contexts';
@@ -40,6 +40,11 @@ export default function SendScreen() {
       console.log(error);
     }
   };
+
+  useEffect(() => {
+    let key = bip39.generateMnemonic();
+    console.log('key--', key);
+  }, []);
 
   // get unsigned transaction
   const getUnsignedTransaction = async (targets, feePerByte = 2) => {
@@ -157,12 +162,14 @@ export default function SendScreen() {
     // check testnet address is empty
     if (!address) {
       Alert.alert('ALERT', 'Enter Testnet Address');
+      handleGlobalSpinner(false);
       return;
     }
 
     // check amount is empty
     if (!amount) {
       Alert.alert('ALERT', 'Enter Amount');
+      handleGlobalSpinner(false);
       return;
     }
 
