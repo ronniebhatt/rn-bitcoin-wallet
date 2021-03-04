@@ -5,7 +5,7 @@ export default function TransactionCard({
   transactionID,
   amount,
   isCredited,
-  confirmations,
+  confirmed,
 }) {
   return (
     <View style={styles.container}>
@@ -20,10 +20,10 @@ export default function TransactionCard({
       <View
         style={{
           ...styles.confirmationContainer,
-          backgroundColor: isCredited ? 'green' : 'red',
+          backgroundColor: confirmed ? 'green' : 'red',
         }}>
         <Text style={styles.confirmationText}>
-          {confirmations} Confirmations
+          {confirmed ? 'CONFIRMED' : 'UNCONFIRMED'}
         </Text>
       </View>
     </View>

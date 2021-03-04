@@ -4,7 +4,6 @@ import {
   Text,
   SafeAreaView,
   Image,
-  FlatList,
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
@@ -18,6 +17,7 @@ import {LOGO_URL} from '../../api/bitcoin/constant';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import generateUtxos from '../../Helper/generateUtxos';
+import {FlatList} from 'react-native-gesture-handler';
 
 export default function HomeScreen({navigation}) {
   const [bitcoinData, setBitcoinData] = useState(null);
@@ -29,23 +29,22 @@ export default function HomeScreen({navigation}) {
     setBitcoinBalance,
     setUtxos,
     usedAndUnusedData,
-    tx,
     usedAndUnusedChangeData,
     setUsedAndUnusedData,
     setRegularAddressUtxo,
     setChangeAddressUtxo,
     regularAddressUtxo,
     changeAddressUtxo,
+    utxos,
   } = useContext(Contexts);
   const [refreshing, setRefreshing] = useState(false);
   const utxoArray = [];
   const changeUtxoArray = [];
   let balance = 0;
 
-  let senderAddress = {};
-
   // handle pull to refresh
   const onRefresh = async () => {
+    console.log('on refresh');
     if (storedBitcoinData) {
       setRefreshing(true);
       getBitcoinData(storedBitcoinData.address);
@@ -89,6 +88,7 @@ export default function HomeScreen({navigation}) {
 
   useEffect(() => {
     getAllUtoxos();
+    console.log('usedAndUnusedChangeData', usedAndUnusedChangeData);
   }, [usedAndUnusedData, usedAndUnusedChangeData]);
 
   const handleLogout = async () => {
@@ -217,79 +217,37 @@ export default function HomeScreen({navigation}) {
 
             {/* TRANSACTION LIST CONTAINER */}
             <View style={styles.bottomContainer}>
-              <Text style={styles.transactionText}>Transactions</Text>
+              <Text style={styles.transactionText}>Unsigned Transactions</Text>
               <Text style={{color: '#fff', textAlign: 'center', fontSize: 12}}>
                 Pull to refresh
               </Text>
-
               <FlatList
                 keyExtractor={(item, index) => index.toString()}
                 refreshControl={
                   <RefreshControl
+                    enabled={true}
                     refreshing={refreshing}
                     onRefresh={onRefresh}
                   />
                 }
-                data={tx}
+                data={utxos}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={() => (
                   <View style={styles.emptyTransactionContainer}>
                     <Text style={{color: '#fff'}}>No Transactions</Text>
                   </View>
                 )}
-                contentContainerStyle={{paddingBottom: 750}}
+                contentContainerStyle={{paddingBottom: 1050}}
                 renderItem={({item}) => {
-                  const debitedArray = [];
-                  const creditedArray = [];
-
-                  // setting debited transaction to debitedArray
-                  item.inputs.map((input) => {
-                    debitedArray.push(input);
-                  });
-
-                  // setting credited transaction to creditedArray
-                  item.outputs.map((output) => {
-                    creditedArray.push(output);
-                  });
-
-                  // setting sender transaction to creditedArray
-                  item.outputs.map((output) => {
-                    senderAddress[item.hash] = output;
-                  });
                   return (
                     <>
                       {/* rendering credited transaction */}
-                      {creditedArray.map((credit, index) => {
-                        return (
-                          <TransactionCard
-                            key={index}
-                            transactionID={item.hash}
-                            amount={credit.value}
-                            isCredited={true}
-                            confirmations={item.confirmations}
-                          />
-                        );
-                      })}
-
-                      {/* rendering debited transaction */}
-                      {debitedArray.map((debit, index) => {
-                        let totalDeducted = 0;
-                        if (senderAddress[item.hash]) {
-                          totalDeducted = senderAddress[item.hash].value;
-                        } else {
-                          totalDeducted = debit.output_value;
-                        }
-
-                        return (
-                          <TransactionCard
-                            key={index}
-                            transactionID={item.hash}
-                            amount={totalDeducted}
-                            isCredited={false}
-                            confirmations={item.confirmations}
-                          />
-                        );
-                      })}
+                      <TransactionCard
+                        transactionID={item.txid}
+                        amount={item.value}
+                        isCredited={true}
+                        confirmed={item.status.confirmed}
+                      />
                     </>
                   );
                 }}

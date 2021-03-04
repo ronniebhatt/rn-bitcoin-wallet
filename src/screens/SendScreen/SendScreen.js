@@ -41,11 +41,6 @@ export default function SendScreen() {
     }
   };
 
-  useEffect(() => {
-    let key = bip39.generateMnemonic();
-    console.log('key--', key);
-  }, []);
-
   // get unsigned transaction
   const getUnsignedTransaction = async (targets, feePerByte = 2) => {
     const formattedUTXO = [];
@@ -174,11 +169,11 @@ export default function SendScreen() {
     }
 
     // validate receiver address
-    const data = await checkTestAddress(address);
+    const data = await checkTestAddress(address.trim());
     // recipient address and amount
     const targets = [
       {
-        address: address,
+        address: address.trim(),
         value: parseInt(amount),
       },
     ];
@@ -191,7 +186,6 @@ export default function SendScreen() {
         const {success, inputs, outputs, message} = data;
         if (success) {
           const transactionBuilder = new bitcoin.TransactionBuilder(testnet);
-
           inputs.forEach((input) =>
             transactionBuilder.addInput(input.txId, input.vout),
           );
@@ -216,6 +210,7 @@ export default function SendScreen() {
 
           const transaction = transactionBuilder.build();
           const transactionHex = transaction.toHex();
+          console.log('transactionHex', transactionHex);
           if (transactionHex) {
             broadcastRawTransaction(transactionHex);
           }

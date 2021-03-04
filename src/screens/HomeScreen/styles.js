@@ -53,9 +53,10 @@ const styles = StyleSheet.create({
   },
   transactionText: {
     textAlign: 'center',
-    fontSize: 22,
-    paddingVertical: 10,
+    fontSize: 18,
+    paddingVertical: 15,
     color: '#fff',
+    textTransform: 'uppercase',
   },
   emptyTransactionContainer: {
     justifyContent: 'center',

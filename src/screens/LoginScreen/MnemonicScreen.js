@@ -1,4 +1,4 @@
-import React, {useContext, useRef, useState} from 'react';
+import React, {useContext, useRef, useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -20,7 +20,6 @@ const bitcoin = require('bitcoinjs-lib');
 
 export default function MnemonicScreen({route}) {
   const {type} = route.params;
-  console.log('route--', type);
   const ref = useRef({
     currentNo: 10,
     currentChangeNo: 10,
@@ -38,11 +37,17 @@ export default function MnemonicScreen({route}) {
   } = useContext(Contexts);
 
   const [mnemonic, setMnemonic] = useState('');
+  const [regularAddressComplete, setRegularAddressComplete] = useState(false);
+  const [changeAddressComplete, setChangeAddressComplete] = useState(false);
 
-  const generateTestnetAddressAndPrivateKey = async (
-    currentNo,
-    mnemonicPhrase,
-  ) => {
+  useEffect(() => {
+    if (regularAddressComplete && changeAddressComplete) {
+      setIsLoggedIn(true);
+      handleGlobalSpinner(false);
+    }
+  }, [regularAddressComplete, changeAddressComplete]);
+
+  const generateTestnetAddressAndPrivateKey = async (mnemonicPhrase) => {
     ref.current.generatedAddress = [];
     const addressAndPrivatekey = [];
     const changeAddressAndPrivatekey = [];
@@ -71,7 +76,7 @@ export default function MnemonicScreen({route}) {
       .derive(1);
 
     // ---- generate 5 change address ---
-    for (let i = 0; i < currentNo; ++i) {
+    for (let i = 0; i < ref.current.currentChangeNo; ++i) {
       changeAddressAndPrivatekey.push(
         generateAddress(changeAddressBranch.derive(i)),
       );
@@ -82,20 +87,13 @@ export default function MnemonicScreen({route}) {
     // ---- generate 5 change address ---
 
     // generate 5 testnet address
-    for (let i = 0; i < currentNo; ++i) {
+    for (let i = 0; i < ref.current.currentNo; ++i) {
       addressAndPrivatekey.push(generateAddress(branch.derive(i)));
       ref.current.generatedAddress.push(generateAddress(branch.derive(i)));
     }
 
-    const regularAddressComplete = processBitcoinAddress(addressAndPrivatekey);
-    const ChangeAddressComplete = processBitcoinChangeAddress(
-      changeAddressAndPrivatekey,
-    );
-
-    if (regularAddressComplete && ChangeAddressComplete) {
-      setIsLoggedIn(true);
-      handleGlobalSpinner(false);
-    }
+    await processBitcoinAddress(addressAndPrivatekey);
+    await processBitcoinChangeAddress(changeAddressAndPrivatekey);
   };
 
   const processBitcoinAddress = async (addressAndPrivatekey) => {
@@ -176,7 +174,7 @@ export default function MnemonicScreen({route}) {
         // has no unused data generate more 10 address
         usedAddress.splice(0, usedAddress.length);
         ref.current.currentNo += 10;
-        generateTestnetAddressAndPrivateKey(ref.current.currentNo, mnemonic);
+        generateTestnetAddressAndPrivateKey(mnemonic);
       } else {
         // has some unused data
         Object.keys(processedUsedAndUnusedAddress).map((el) => {
@@ -191,14 +189,12 @@ export default function MnemonicScreen({route}) {
               }),
             );
             bitcoinAddress = processedUsedAndUnusedAddress[el].address;
+            setRegularAddressComplete(true);
           }
         });
       }
     });
-    if (bitcoinAddress) {
-      console.log('here');
-      return true;
-    }
+
     // --------- using promise ------------
   };
 
@@ -280,10 +276,7 @@ export default function MnemonicScreen({route}) {
         // has no unused data generate more 10 address
         usedAddress.splice(0, usedAddress.length);
         ref.current.currentChangeNo += 10;
-        generateTestnetAddressAndPrivateKey(
-          ref.current.currentChangeNo,
-          mnemonic,
-        );
+        generateTestnetAddressAndPrivateKey(mnemonic);
       } else {
         // has some unused data
         Object.keys(processedUsedAndUnusedAddress).map((el) => {
@@ -297,22 +290,18 @@ export default function MnemonicScreen({route}) {
               }),
             );
             bitcoinAddress = processedUsedAndUnusedAddress[el].address;
+            setChangeAddressComplete(true);
           }
         });
       }
     });
     // --------- using promise ------------
-    if (bitcoinAddress) {
-      console.log('here2');
-
-      return true;
-    }
   };
 
   // handle login btn pressed
   const handleLoginBtn = async () => {
     handleGlobalSpinner(true);
-    await generateTestnetAddressAndPrivateKey(ref.current.currentNo, mnemonic);
+    await generateTestnetAddressAndPrivateKey(mnemonic);
   };
 
   const generateMnemonicPhrase = () => {
@@ -344,7 +333,7 @@ export default function MnemonicScreen({route}) {
               style={styles.textInput}
               multiline
               value={mnemonic}
-              onChangeText={(text) => setMnemonic(text)}
+              onChangeText={(text) => setMnemonic(text.trim())}
               editable={type === 'create_wallet' ? false : true}
             />
           </View>
