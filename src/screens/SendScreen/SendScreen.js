@@ -47,7 +47,7 @@ export default function SendScreen() {
   };
 
   // get unsigned transaction
-  const getUnsignedTransaction = async (targets, feePerByte = 5) => {
+  const getUnsignedTransaction = async (targets, feePerByte = 2) => {
     const formattedUTXO = [];
     utxos.forEach((utxo) => {
       formattedUTXO.push({
@@ -60,6 +60,9 @@ export default function SendScreen() {
     });
 
     let {inputs, outputs, fee} = coinSelect(formattedUTXO, targets, feePerByte);
+    console.log('fee', fee);
+    console.log('inputs', inputs);
+    console.log('outputs', outputs);
     if (!inputs || !outputs) {
       return {
         success: false,
@@ -108,7 +111,7 @@ export default function SendScreen() {
         // change to next change address
 
         const newUsedAndUnusedData = {...usedAndUnusedChangeData};
-        newUsedAndUnusedData[changeAddress.address].is_used = true;
+        newUsedAndUnusedData[changeAddress].is_used = true;
         setUsedAndUnusedChangeData(newUsedAndUnusedData);
         await AsyncStorage.setItem(
           'usedUnusedChangeAddress',
@@ -127,9 +130,7 @@ export default function SendScreen() {
           // change to next address
           Object.keys(newUsedAndUnusedData).map((el) => {
             if (!newUsedAndUnusedData[el].is_used) {
-              setChangeAddress({
-                address: newUsedAndUnusedData[el].address,
-              });
+              setChangeAddress(newUsedAndUnusedData[el].address);
               AsyncStorage.setItem(
                 'change_address',
                 JSON.stringify({
@@ -191,7 +192,7 @@ export default function SendScreen() {
           );
           outputs.forEach((output) => {
             if (!output.address) {
-              output.address = changeAddress.address;
+              output.address = changeAddress;
             }
 
             transactionBuilder.addOutput(output.address, output.value);

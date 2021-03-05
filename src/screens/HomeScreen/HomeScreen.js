@@ -125,8 +125,7 @@ export default function HomeScreen({navigation}) {
       });
       if (usedAddress.length === Object.keys(usedAndUnusedData).length) {
         // has no unused data navigate to login screen
-        setIsLoggedIn(false);
-        return;
+        handleLogout();
       }
 
       if (usedAddress.length !== Object.keys(usedAndUnusedData).length) {
@@ -174,95 +173,93 @@ export default function HomeScreen({navigation}) {
     <>
       {!bitcoinData && <Spinner />}
       {bitcoinData && (
-        <View style={styles.container}>
-          <SafeAreaView>
-            <ScrollView
-              style={styles.topContainer}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }>
-              <View
-                style={{
-                  backgroundColor: '#265C7E',
-                  paddingVertical: 10,
-                }}>
-                <Text
-                  style={{color: '#fff', textAlign: 'center', fontSize: 12}}>
-                  Pull to refresh
-                </Text>
-              </View>
-              {/* TOP LOGO */}
-              <Image
-                style={styles.logo}
-                resizeMode="contain"
-                source={{
-                  uri: LOGO_URL,
-                }}
-              />
-
-              <TouchableOpacity
-                onPress={handleLogout}
-                style={{position: 'absolute', right: 15, top: 45}}>
-                <AntDesign name="logout" size={30} />
-              </TouchableOpacity>
-
-              {/* CURRENT BALANCE */}
-              <Text style={styles.balanceText}>Balance {bitcoinBalance}</Text>
-
-              {/* CURRENT TESTNET ADDRESS */}
-              <Text style={styles.btnAddressText}>
-                {storedBitcoinData.address}
+        <SafeAreaView style={styles.container}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={styles.topContainer}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }>
+            <View
+              style={{
+                backgroundColor: '#265C7E',
+                paddingVertical: 10,
+              }}>
+              <Text style={{color: '#fff', textAlign: 'center', fontSize: 12}}>
+                Pull to refresh
               </Text>
-
-              <View style={styles.btnContainer}>
-                <View style={{marginVertical: 20}}>
-                  <CustomButton
-                    text="SEND"
-                    handleBtnClick={() => navigation.navigate('SendScreen')}
-                  />
-                </View>
-                <View style={{marginVertical: 20}}>
-                  <CustomButton
-                    text="RECEIVE"
-                    handleBtnClick={() =>
-                      navigation.navigate('ReceiveScreen', {
-                        bitcoinData,
-                      })
-                    }
-                  />
-                </View>
-              </View>
-            </ScrollView>
-
-            {/* TRANSACTION LIST CONTAINER */}
-            <View style={styles.bottomContainer}>
-              <Text style={styles.transactionText}>Unsigned Transactions</Text>
-              <FlatList
-                keyExtractor={(item, index) => index.toString()}
-                data={utxos}
-                showsVerticalScrollIndicator={false}
-                ListEmptyComponent={() => (
-                  <View style={styles.emptyTransactionContainer}>
-                    <Text style={{color: '#fff'}}>No Transactions</Text>
-                  </View>
-                )}
-                renderItem={({item}) => {
-                  return (
-                    <>
-                      {/* rendering credited transaction */}
-                      <TransactionCard
-                        transactionID={item.txid}
-                        amount={item.value}
-                        isCredited={true}
-                        confirmed={item.status.confirmed}
-                      />
-                    </>
-                  );
-                }}
-              />
             </View>
-          </SafeAreaView>
-        </View>
+            {/* TOP LOGO */}
+            <Image
+              style={styles.logo}
+              resizeMode="contain"
+              source={{
+                uri: LOGO_URL,
+              }}
+            />
+
+            <TouchableOpacity
+              onPress={handleLogout}
+              style={{position: 'absolute', right: 15, top: 45}}>
+              <AntDesign name="logout" size={30} />
+            </TouchableOpacity>
+
+            {/* CURRENT BALANCE */}
+            <Text style={styles.balanceText}>Balance {bitcoinBalance}</Text>
+
+            {/* CURRENT TESTNET ADDRESS */}
+            <Text style={styles.btnAddressText}>
+              {storedBitcoinData.address}
+            </Text>
+
+            <View style={styles.btnContainer}>
+              <View style={{marginVertical: 20}}>
+                <CustomButton
+                  text="SEND"
+                  handleBtnClick={() => navigation.navigate('SendScreen')}
+                />
+              </View>
+              <View style={{marginVertical: 10}}>
+                <CustomButton
+                  text="RECEIVE"
+                  handleBtnClick={() =>
+                    navigation.navigate('ReceiveScreen', {
+                      bitcoinData,
+                    })
+                  }
+                />
+              </View>
+            </View>
+          </ScrollView>
+
+          {/* TRANSACTION LIST CONTAINER */}
+          <View style={styles.bottomContainer}>
+            <Text style={styles.transactionText}>Unsigned Transactions</Text>
+            <FlatList
+              keyExtractor={(item, index) => index.toString()}
+              data={utxos}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={() => (
+                <View style={styles.emptyTransactionContainer}>
+                  <Text style={{color: '#fff'}}>No Transactions</Text>
+                </View>
+              )}
+              renderItem={({item}) => {
+                return (
+                  <>
+                    {/* rendering credited transaction */}
+                    <TransactionCard
+                      transactionID={item.txid}
+                      amount={item.value}
+                      isCredited={true}
+                      confirmed={item.status.confirmed}
+                    />
+                  </>
+                );
+              }}
+            />
+          </View>
+        </SafeAreaView>
       )}
     </>
   );

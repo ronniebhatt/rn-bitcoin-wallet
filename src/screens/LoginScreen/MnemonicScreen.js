@@ -75,7 +75,7 @@ export default function MnemonicScreen({route}) {
       .deriveHardened(0)
       .derive(1);
 
-    // ---- generate 5 change address ---
+    // ---- generate 10 change address ---
     for (let i = 0; i < ref.current.currentChangeNo; ++i) {
       changeAddressAndPrivatekey.push(
         generateAddress(changeAddressBranch.derive(i)),
@@ -84,7 +84,8 @@ export default function MnemonicScreen({route}) {
         generateAddress(changeAddressBranch.derive(i)),
       );
     }
-    // ---- generate 5 change address ---
+    console.log('ref changeAddressBranch ', ref.current.generatedChangeAddress);
+    // ---- generate 10 change address ---
 
     // generate 5 testnet address
     for (let i = 0; i < ref.current.currentNo; ++i) {
@@ -97,6 +98,7 @@ export default function MnemonicScreen({route}) {
   };
 
   const processBitcoinAddress = async (addressAndPrivatekey) => {
+    console.log('ref---', ref.current.currentChangeNo);
     const apiAddressResponse = [];
     const processedUsedAndUnusedAddress = {};
     let bitcoinAddress = null;
@@ -275,7 +277,8 @@ export default function MnemonicScreen({route}) {
       ) {
         // has no unused data generate more 10 address
         usedAddress.splice(0, usedAddress.length);
-        ref.current.currentChangeNo += 10;
+        ref.current.generatedChangeAddress = [];
+        ref.current.currentChangeNo = ref.current.currentChangeNo + 10;
         generateTestnetAddressAndPrivateKey(mnemonic);
       } else {
         // has some unused data
