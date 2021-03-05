@@ -215,7 +215,7 @@ export default function HomeScreen({navigation}) {
               </Text>
 
               <View style={styles.btnContainer}>
-                <View style={{marginVertical: 15}}>
+                <View style={{marginVertical: 20}}>
                   <CustomButton
                     text="SEND"
                     handleBtnClick={() => navigation.navigate('SendScreen')}
