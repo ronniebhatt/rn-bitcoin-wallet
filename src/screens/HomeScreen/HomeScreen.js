@@ -57,8 +57,8 @@ export default function HomeScreen({navigation}) {
   const getBitcoinData = async (address) => {
     try {
       const data = await getBitcoinDetails(address);
-      setBitcoinData(data);
-      return data;
+      setBitcoinData(data.address);
+      return data.address;
     } catch (error) {
       console.log(error);
     }
@@ -99,7 +99,11 @@ export default function HomeScreen({navigation}) {
   };
 
   useEffect(() => {
-    if (bitcoinData && bitcoinData.txs.length !== 0) {
+    if (
+      bitcoinData &&
+      bitcoinData.transactions &&
+      bitcoinData.transactions.length !== 0
+    ) {
       // change to next unused addresss
 
       const newUsedAndUnusedData = {...usedAndUnusedData};
