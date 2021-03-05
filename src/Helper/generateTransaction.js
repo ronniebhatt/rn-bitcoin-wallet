@@ -7,7 +7,6 @@ const generateTransaction = async (data, utxoArray, setTx) => {
         ).then((response) => {
           return new Promise(() => {
             response.json().then((transactions) => {
-              console.log('transactions', transactions.address.transactions);
               if (
                 transactions.address.transactions &&
                 transactions.address.transactions.length !== 0
@@ -25,7 +24,6 @@ const generateTransaction = async (data, utxoArray, setTx) => {
     }),
   ).then(() => {
     setTx(utxoArray);
-    console.log(utxoArray);
   });
 };
 

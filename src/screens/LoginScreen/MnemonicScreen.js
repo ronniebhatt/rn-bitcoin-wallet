@@ -84,7 +84,6 @@ export default function MnemonicScreen({route}) {
         generateAddress(changeAddressBranch.derive(i)),
       );
     }
-    console.log('ref changeAddressBranch ', ref.current.generatedChangeAddress);
     // ---- generate 10 change address ---
 
     // generate 5 testnet address
@@ -98,7 +97,6 @@ export default function MnemonicScreen({route}) {
   };
 
   const processBitcoinAddress = async (addressAndPrivatekey) => {
-    console.log('ref---', ref.current.currentChangeNo);
     const apiAddressResponse = [];
     const processedUsedAndUnusedAddress = {};
     let bitcoinAddress = null;

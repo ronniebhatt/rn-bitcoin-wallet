@@ -24,15 +24,11 @@ export default function SendScreen() {
     setIsLoggedIn,
     setChangeAddress,
   } = useContext(Contexts);
-  useEffect(() => {
-    console.log('changeAddress', changeAddress);
-  }, [changeAddress]);
 
   // check if receiver testnet address is valid or not
   const checkTestAddress = async (testnetAddress) => {
     try {
       const data = await getBitcoinDetails(testnetAddress);
-      console.log('data', data);
       if (data.error) {
         Alert.alert('ALERT', 'Invalid Address');
         handleGlobalSpinner(false);
@@ -60,9 +56,7 @@ export default function SendScreen() {
     });
 
     let {inputs, outputs, fee} = coinSelect(formattedUTXO, targets, feePerByte);
-    console.log('fee', fee);
-    console.log('inputs', inputs);
-    console.log('outputs', outputs);
+
     if (!inputs || !outputs) {
       return {
         success: false,
@@ -211,7 +205,6 @@ export default function SendScreen() {
 
           const transaction = transactionBuilder.build();
           const transactionHex = transaction.toHex();
-          console.log('transactionHex', transactionHex);
           if (transactionHex) {
             broadcastRawTransaction(transactionHex);
           }

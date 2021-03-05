@@ -45,7 +45,6 @@ export default function HomeScreen({navigation}) {
 
   // handle pull to refresh
   const onRefresh = async () => {
-    console.log('on refresh');
     if (storedBitcoinData) {
       setRefreshing(true);
       getBitcoinData(storedBitcoinData.address);
@@ -90,7 +89,6 @@ export default function HomeScreen({navigation}) {
 
   useEffect(() => {
     getAllUtoxos();
-    console.log('usedAndUnusedChangeData', usedAndUnusedChangeData);
   }, [usedAndUnusedData, usedAndUnusedChangeData]);
 
   const handleLogout = async () => {
@@ -101,15 +99,10 @@ export default function HomeScreen({navigation}) {
   };
 
   useEffect(() => {
-    console.log('bitcoinData----', bitcoinData, usedAndUnusedData);
-    console.log('usedAndUnusedChangeData', usedAndUnusedChangeData);
-
     if (bitcoinData && bitcoinData.txs.length !== 0) {
       // change to next unused addresss
-      console.log('change to next unused addresss', usedAndUnusedData);
 
       const newUsedAndUnusedData = {...usedAndUnusedData};
-      console.log('newUsedAndUnusedData', newUsedAndUnusedData);
       newUsedAndUnusedData[bitcoinData.address].is_used = true;
       setUsedAndUnusedData(newUsedAndUnusedData);
       AsyncStorage.setItem(
@@ -165,7 +158,6 @@ export default function HomeScreen({navigation}) {
       });
       setBitcoinBalance(balance);
       setUtxos(regularAddressUtxo.concat(changeAddressUtxo));
-      console.log('---l--', regularAddressUtxo.concat(changeAddressUtxo));
     }
   }, [regularAddressUtxo, changeAddressUtxo]);
 
