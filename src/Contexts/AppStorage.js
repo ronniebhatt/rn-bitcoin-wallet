@@ -12,7 +12,6 @@ const AppStorage = ({children}) => {
   const [utxos, setUtxos] = useState([]);
   const [regularAddressUtxo, setRegularAddressUtxo] = useState([]);
   const [changeAddressUtxo, setChangeAddressUtxo] = useState([]);
-  const [tx, setTx] = useState([]);
   const [mnemonicRoot, setMnemonicRoot] = useState(null);
   const [changeAddress, setChangeAddress] = useState('');
 
@@ -39,8 +38,6 @@ const AppStorage = ({children}) => {
     setMnemonicRoot,
     changeAddress,
     setChangeAddress,
-    tx,
-    setTx,
     usedAndUnusedChangeData,
     setUsedAndUnusedChangeData,
     regularAddressUtxo,

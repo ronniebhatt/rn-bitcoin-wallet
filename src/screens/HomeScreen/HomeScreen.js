@@ -6,6 +6,7 @@ import {
   Image,
   RefreshControl,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import TransactionCard from '../../Components/TransactionCard/TransactionCard';
@@ -48,6 +49,7 @@ export default function HomeScreen({navigation}) {
     if (storedBitcoinData) {
       setRefreshing(true);
       getBitcoinData(storedBitcoinData.address);
+      getAllUtoxos();
       setRefreshing(false);
     }
   };
@@ -156,7 +158,7 @@ export default function HomeScreen({navigation}) {
   };
 
   useEffect(() => {
-    if (regularAddressUtxo.length !== 0 && changeAddressUtxo.length !== 0) {
+    if (regularAddressUtxo && changeAddressUtxo) {
       const array = regularAddressUtxo.concat(changeAddressUtxo);
       array.map((el) => {
         balance += el.value;
@@ -173,7 +175,21 @@ export default function HomeScreen({navigation}) {
       {bitcoinData && (
         <View style={styles.container}>
           <SafeAreaView>
-            <View style={styles.topContainer}>
+            <ScrollView
+              style={styles.topContainer}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }>
+              <View
+                style={{
+                  backgroundColor: '#265C7E',
+                  paddingVertical: 10,
+                }}>
+                <Text
+                  style={{color: '#fff', textAlign: 'center', fontSize: 12}}>
+                  Pull to refresh
+                </Text>
+              </View>
               {/* TOP LOGO */}
               <Image
                 style={styles.logo}
@@ -185,7 +201,7 @@ export default function HomeScreen({navigation}) {
 
               <TouchableOpacity
                 onPress={handleLogout}
-                style={{position: 'absolute', right: 15, top: 15}}>
+                style={{position: 'absolute', right: 15, top: 45}}>
                 <AntDesign name="logout" size={30} />
               </TouchableOpacity>
 
@@ -213,23 +229,13 @@ export default function HomeScreen({navigation}) {
                   }
                 />
               </View>
-            </View>
+            </ScrollView>
 
             {/* TRANSACTION LIST CONTAINER */}
             <View style={styles.bottomContainer}>
               <Text style={styles.transactionText}>Unsigned Transactions</Text>
-              <Text style={{color: '#fff', textAlign: 'center', fontSize: 12}}>
-                Pull to refresh
-              </Text>
               <FlatList
                 keyExtractor={(item, index) => index.toString()}
-                refreshControl={
-                  <RefreshControl
-                    enabled={true}
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                  />
-                }
                 data={utxos}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={() => (
@@ -237,7 +243,6 @@ export default function HomeScreen({navigation}) {
                     <Text style={{color: '#fff'}}>No Transactions</Text>
                   </View>
                 )}
-                contentContainerStyle={{paddingBottom: 1050}}
                 renderItem={({item}) => {
                   return (
                     <>

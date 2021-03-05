@@ -23,6 +23,7 @@ const generateUtxos = async (data, setUtxos, utxoArray) => {
       });
     }),
   ).then(() => {
+    console.log('utxos', utxoArray);
     setUtxos(utxoArray);
   });
 };

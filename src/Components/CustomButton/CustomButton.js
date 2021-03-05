@@ -30,6 +30,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#fff',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
   },
 });

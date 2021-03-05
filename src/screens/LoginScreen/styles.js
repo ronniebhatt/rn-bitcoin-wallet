@@ -58,11 +58,11 @@ const styles = StyleSheet.create({
   },
   btnText: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
   },
   generateAddressBtn: {
-    backgroundColor: 'rgb(251,87,7)',
+    backgroundColor: '#265C7E',
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderRadius: 8,

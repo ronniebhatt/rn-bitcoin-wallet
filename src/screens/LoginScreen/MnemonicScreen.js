@@ -334,19 +334,28 @@ export default function MnemonicScreen({route}) {
               multiline
               value={mnemonic}
               onChangeText={(text) => setMnemonic(text.trim())}
-              editable={type === 'create_wallet' ? false : true}
             />
           </View>
+          {type === 'create_wallet' && (
+            <>
+              <View style={{justifyContent: 'center', alignItems: 'center'}}>
+                <TouchableOpacity
+                  style={styles.generateAddressBtn}
+                  onPress={generateMnemonicPhrase}>
+                  <Text style={styles.generateAddressText}>Generate</Text>
+                </TouchableOpacity>
+              </View>
+              <View>
+                <Text style={{opacity: 0.6, paddingVertical: 10}}>
+                  Click on generate button to generate a new 12 word mnemonic
+                </Text>
+                <Text style={{opacity: 0.6}}>
+                  Please write down these words in a secure location
+                </Text>
+              </View>
+            </>
+          )}
         </View>
-        {type === 'create_wallet' && (
-          <View style={{justifyContent: 'center', alignItems: 'center'}}>
-            <TouchableOpacity
-              style={styles.generateAddressBtn}
-              onPress={generateMnemonicPhrase}>
-              <Text style={styles.generateAddressText}>Generate Mnemonic</Text>
-            </TouchableOpacity>
-          </View>
-        )}
 
         <View style={styles.btnContainer}>
           <CustomButton

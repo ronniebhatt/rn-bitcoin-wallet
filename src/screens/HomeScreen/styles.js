@@ -8,18 +8,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   topContainer: {
-    height: height * 0.5,
+    height: height * 0.55,
+    zIndex: 100,
   },
   bottomContainer: {
-    height: '100%',
+    height: height * 0.45,
     borderTopEndRadius: 20,
     borderTopStartRadius: 20,
     backgroundColor: '#265C7E',
   },
   btnContainer: {
     width,
-    position: 'absolute',
-    bottom: 30,
+    position: 'relative',
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -43,7 +44,7 @@ const styles = StyleSheet.create({
   },
   balanceText: {
     textAlign: 'center',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '600',
   },
   btnAddressText: {
