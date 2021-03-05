@@ -99,7 +99,6 @@ export default function MnemonicScreen({route}) {
   const processBitcoinAddress = async (addressAndPrivatekey) => {
     const apiAddressResponse = [];
     const processedUsedAndUnusedAddress = {};
-    let bitcoinAddress = null;
 
     // --------- using promise ------------
     // getting data of all generated address
@@ -188,7 +187,6 @@ export default function MnemonicScreen({route}) {
                 address: processedUsedAndUnusedAddress[el].address,
               }),
             );
-            bitcoinAddress = processedUsedAndUnusedAddress[el].address;
             setRegularAddressComplete(true);
           }
         });
@@ -201,7 +199,6 @@ export default function MnemonicScreen({route}) {
   const processBitcoinChangeAddress = async (changeAddress) => {
     const apiAddressResponse = [];
     const processedUsedAndUnusedAddress = {};
-    let bitcoinAddress = null;
 
     // --------- using promise ------------
     // getting data of all generated address
@@ -290,7 +287,6 @@ export default function MnemonicScreen({route}) {
                 address: processedUsedAndUnusedAddress[el].address,
               }),
             );
-            bitcoinAddress = processedUsedAndUnusedAddress[el].address;
             setChangeAddressComplete(true);
           }
         });

@@ -1,4 +1,4 @@
-import React, {useState, useContext, useEffect} from 'react';
+import React, {useState, useContext} from 'react';
 import {View, SafeAreaView, TextInput, Image, Alert} from 'react-native';
 import styles from './styles';
 import Contexts from '../../Contexts/Contexts';
@@ -21,7 +21,6 @@ export default function SendScreen() {
     changeAddress,
     usedAndUnusedChangeData,
     setUsedAndUnusedChangeData,
-    setIsLoggedIn,
     setChangeAddress,
   } = useContext(Contexts);
 
