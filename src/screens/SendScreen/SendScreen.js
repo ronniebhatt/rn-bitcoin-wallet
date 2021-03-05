@@ -24,17 +24,22 @@ export default function SendScreen() {
     setIsLoggedIn,
     setChangeAddress,
   } = useContext(Contexts);
+  useEffect(() => {
+    console.log('changeAddress', changeAddress);
+  }, [changeAddress]);
 
   // check if receiver testnet address is valid or not
   const checkTestAddress = async (testnetAddress) => {
     try {
       const data = await getBitcoinDetails(testnetAddress);
+      console.log('data', data);
+      if (data.error) {
+        Alert.alert('ALERT', 'Invalid Address');
+        handleGlobalSpinner(false);
+        return false;
+      }
       if (data) {
         return data.address;
-      }
-      if (!data) {
-        Alert.alert('ALERT', 'Invalid Address');
-        return false;
       }
     } catch (error) {
       console.log(error);
@@ -42,7 +47,7 @@ export default function SendScreen() {
   };
 
   // get unsigned transaction
-  const getUnsignedTransaction = async (targets, feePerByte = 2) => {
+  const getUnsignedTransaction = async (targets, feePerByte = 5) => {
     const formattedUTXO = [];
     utxos.forEach((utxo) => {
       formattedUTXO.push({
@@ -116,11 +121,6 @@ export default function SendScreen() {
             usedAddress.push(true);
           }
         });
-        if (usedAddress.length === Object.keys(newUsedAndUnusedData).length) {
-          // has no unused data navigate to login screen
-          setIsLoggedIn(false);
-          return;
-        }
 
         if (usedAddress.length !== Object.keys(newUsedAndUnusedData).length) {
           // login with the new address (next address)

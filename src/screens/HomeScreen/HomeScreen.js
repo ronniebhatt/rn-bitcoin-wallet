@@ -102,6 +102,7 @@ export default function HomeScreen({navigation}) {
 
   useEffect(() => {
     console.log('bitcoinData----', bitcoinData, usedAndUnusedData);
+    console.log('usedAndUnusedChangeData', usedAndUnusedChangeData);
 
     if (bitcoinData && bitcoinData.txs.length !== 0) {
       // change to next unused addresss
@@ -214,20 +215,22 @@ export default function HomeScreen({navigation}) {
               </Text>
 
               <View style={styles.btnContainer}>
-                <View style={{marginVertical: 20}}>
+                <View style={{marginVertical: 15}}>
                   <CustomButton
                     text="SEND"
                     handleBtnClick={() => navigation.navigate('SendScreen')}
                   />
                 </View>
-                <CustomButton
-                  text="RECEIVE"
-                  handleBtnClick={() =>
-                    navigation.navigate('ReceiveScreen', {
-                      bitcoinData,
-                    })
-                  }
-                />
+                <View style={{marginVertical: 20}}>
+                  <CustomButton
+                    text="RECEIVE"
+                    handleBtnClick={() =>
+                      navigation.navigate('ReceiveScreen', {
+                        bitcoinData,
+                      })
+                    }
+                  />
+                </View>
               </View>
             </ScrollView>
 
