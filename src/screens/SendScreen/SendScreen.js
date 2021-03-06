@@ -1,4 +1,4 @@
-import React, {useState, useContext} from 'react';
+import React, {useState, useContext, useEffect} from 'react';
 import {View, SafeAreaView, TextInput, Image, Alert} from 'react-native';
 import styles from './styles';
 import Contexts from '../../Contexts/Contexts';
@@ -24,6 +24,10 @@ export default function SendScreen() {
     setChangeAddress,
   } = useContext(Contexts);
 
+  useEffect(() => {
+    console.log('changeAddress', changeAddress);
+  }, [changeAddress]);
+
   // check if receiver testnet address is valid or not
   const checkTestAddress = async (testnetAddress) => {
     try {
@@ -39,6 +43,20 @@ export default function SendScreen() {
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const sortKeys = (obj) => {
+    return Object.assign(
+      ...Object.entries(obj)
+        .sort(function (a, b) {
+          return obj[a[0]].index - obj[b[0]].index;
+        })
+        .map(([key, value]) => {
+          return {
+            [key]: value,
+          };
+        }),
+    );
   };
 
   // get unsigned transaction
@@ -121,17 +139,16 @@ export default function SendScreen() {
         if (usedAddress.length !== Object.keys(newUsedAndUnusedData).length) {
           // login with the new address (next address)
           // change to next address
-          Object.keys(newUsedAndUnusedData).map((el) => {
-            if (!newUsedAndUnusedData[el].is_used) {
-              setChangeAddress(newUsedAndUnusedData[el].address);
-              AsyncStorage.setItem(
-                'change_address',
-                JSON.stringify({
-                  address: newUsedAndUnusedData[el].address,
-                }),
-              );
-            }
-          });
+
+          const currentBitcoinIndex = newUsedAndUnusedData[changeAddress].index;
+          console.log('currentBitcoinIndex', currentBitcoinIndex);
+          const nextAddress = Object.keys(sortKeys(newUsedAndUnusedData))[
+            currentBitcoinIndex + 1
+          ];
+          console.log('currentBitcoinIndex', currentBitcoinIndex);
+
+          setChangeAddress(nextAddress);
+          AsyncStorage.setItem('change_address', JSON.stringify(nextAddress));
         }
       }
       if (!success) {

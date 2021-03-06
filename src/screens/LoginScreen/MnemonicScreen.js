@@ -40,6 +40,20 @@ export default function MnemonicScreen({route}) {
   const [regularAddressComplete, setRegularAddressComplete] = useState(false);
   const [changeAddressComplete, setChangeAddressComplete] = useState(false);
 
+  const sortKeys = (obj) => {
+    return Object.assign(
+      ...Object.entries(obj)
+        .sort(function (a, b) {
+          return obj[a[0]].index - obj[b[0]].index;
+        })
+        .map(([key, value]) => {
+          return {
+            [key]: value,
+          };
+        }),
+    );
+  };
+
   useEffect(() => {
     if (regularAddressComplete && changeAddressComplete) {
       setIsLoggedIn(true);
@@ -133,6 +147,9 @@ export default function MnemonicScreen({route}) {
             apiAddressResponse[i].address.address
           ] = {
             is_used: false,
+            index: ref.current.generatedAddress.findIndex(
+              (x) => x.address === apiAddressResponse[i].address.address,
+            ),
             address: apiAddressResponse[i].address.address,
             derivePath: `m/44'/1'/0'/0/${ref.current.generatedAddress.findIndex(
               (x) => x.address === apiAddressResponse[i].address.address,
@@ -144,6 +161,9 @@ export default function MnemonicScreen({route}) {
             apiAddressResponse[i].address.address
           ] = {
             is_used: true,
+            index: ref.current.generatedAddress.findIndex(
+              (x) => x.address === apiAddressResponse[i].address.address,
+            ),
             address: apiAddressResponse[i].address.address,
             derivePath: `m/44'/1'/0'/0/${ref.current.generatedAddress.findIndex(
               (x) => x.address === apiAddressResponse[i].address.address,
@@ -176,20 +196,40 @@ export default function MnemonicScreen({route}) {
         generateTestnetAddressAndPrivateKey(mnemonic);
       } else {
         // has some unused data
-        Object.keys(processedUsedAndUnusedAddress).map((el) => {
-          if (!processedUsedAndUnusedAddress[el].is_used) {
-            setStoredBitcoinData({
-              address: processedUsedAndUnusedAddress[el].address,
-            });
-            AsyncStorage.setItem(
-              'bitcoin_async_data',
-              JSON.stringify({
-                address: processedUsedAndUnusedAddress[el].address,
-              }),
-            );
-            setRegularAddressComplete(true);
+        let currentUnusedAddressIndex = 0;
+
+        for (
+          let i = 0;
+          i < Object.keys(sortKeys(processedUsedAndUnusedAddress)).length;
+          i++
+        ) {
+          if (
+            processedUsedAndUnusedAddress[
+              Object.keys(sortKeys(processedUsedAndUnusedAddress))[i]
+            ].index === i &&
+            !processedUsedAndUnusedAddress[
+              Object.keys(sortKeys(processedUsedAndUnusedAddress))[i]
+            ].is_used
+          ) {
+            currentUnusedAddressIndex = i;
+            break;
           }
+        }
+
+        const nextAddress = Object.keys(
+          sortKeys(processedUsedAndUnusedAddress),
+        )[currentUnusedAddressIndex];
+        setStoredBitcoinData({
+          address: nextAddress,
         });
+        AsyncStorage.setItem(
+          'bitcoin_async_data',
+          JSON.stringify({
+            address: nextAddress,
+          }),
+        );
+
+        setRegularAddressComplete(true);
       }
     });
 
@@ -233,6 +273,9 @@ export default function MnemonicScreen({route}) {
             apiAddressResponse[i].address.address
           ] = {
             is_used: false,
+            index: ref.current.generatedChangeAddress.findIndex(
+              (x) => x.address === apiAddressResponse[i].address.address,
+            ),
             address: apiAddressResponse[i].address.address,
             derivePath: `m/44'/1'/0'/1/${ref.current.generatedChangeAddress.findIndex(
               (x) => x.address === apiAddressResponse[i].address.address,
@@ -244,6 +287,9 @@ export default function MnemonicScreen({route}) {
             apiAddressResponse[i].address.address
           ] = {
             is_used: true,
+            index: ref.current.generatedChangeAddress.findIndex(
+              (x) => x.address === apiAddressResponse[i].address.address,
+            ),
             address: apiAddressResponse[i].address.address,
             derivePath: `m/44'/1'/0'/1/${ref.current.generatedChangeAddress.findIndex(
               (x) => x.address === apiAddressResponse[i].address.address,
@@ -277,19 +323,37 @@ export default function MnemonicScreen({route}) {
         generateTestnetAddressAndPrivateKey(mnemonic);
       } else {
         // has some unused data
-        Object.keys(processedUsedAndUnusedAddress).map((el) => {
-          if (!processedUsedAndUnusedAddress[el].is_used) {
-            setChangeAddress(processedUsedAndUnusedAddress[el].address);
 
-            AsyncStorage.setItem(
-              'change_address',
-              JSON.stringify({
-                address: processedUsedAndUnusedAddress[el].address,
-              }),
-            );
-            setChangeAddressComplete(true);
+        let currentUnusedAddressIndex = 0;
+
+        for (
+          let i = 0;
+          i < Object.keys(sortKeys(processedUsedAndUnusedAddress)).length;
+          i++
+        ) {
+          if (
+            processedUsedAndUnusedAddress[
+              Object.keys(sortKeys(processedUsedAndUnusedAddress))[i]
+            ].index === i &&
+            !processedUsedAndUnusedAddress[
+              Object.keys(sortKeys(processedUsedAndUnusedAddress))[i]
+            ].is_used
+          ) {
+            currentUnusedAddressIndex = i;
+            break;
           }
-        });
+        }
+
+        const nextAddress = Object.keys(
+          sortKeys(processedUsedAndUnusedAddress),
+        )[currentUnusedAddressIndex];
+
+        setChangeAddress(nextAddress);
+
+        AsyncStorage.setItem('change_address', JSON.stringify(nextAddress));
+
+        setChangeAddressComplete(true);
+        console.log('next address', nextAddress.toString());
       }
     });
     // --------- using promise ------------

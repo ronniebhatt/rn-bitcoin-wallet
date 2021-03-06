@@ -50,7 +50,7 @@ export default function App() {
       const changedAddressAsync = await AsyncStorage.getItem('change_address');
       const parsedChangedAddressAsync = JSON.parse(changedAddressAsync);
 
-      setChangeAddress(parsedChangedAddressAsync.address);
+      setChangeAddress(parsedChangedAddressAsync);
       // set mnemonic root
       const mnemonicRoot = await AsyncStorage.getItem('mnemonic_root');
       setMnemonicRoot(mnemonicRoot);

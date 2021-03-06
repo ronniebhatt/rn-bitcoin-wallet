@@ -58,6 +58,7 @@ export default function HomeScreen({navigation}) {
     try {
       const data = await getBitcoinDetails(address);
       setBitcoinData(data.address);
+      console.log('bitcoin', data.address);
       return data.address;
     } catch (error) {
       console.log(error);
@@ -89,6 +90,7 @@ export default function HomeScreen({navigation}) {
 
   useEffect(() => {
     getAllUtoxos();
+    console.log('usedAndUnusedData', usedAndUnusedData);
   }, [usedAndUnusedData, usedAndUnusedChangeData]);
 
   const handleLogout = async () => {
@@ -96,6 +98,19 @@ export default function HomeScreen({navigation}) {
     setUtxos([]);
     await AsyncStorage.clear();
     setIsLoggedIn(false);
+  };
+  const sortKeys = (obj) => {
+    return Object.assign(
+      ...Object.entries(obj)
+        .sort(function (a, b) {
+          return obj[a[0]].index - obj[b[0]].index;
+        })
+        .map(([key, value]) => {
+          return {
+            [key]: value,
+          };
+        }),
+    );
   };
 
   useEffect(() => {
@@ -128,19 +143,24 @@ export default function HomeScreen({navigation}) {
       if (usedAddress.length !== Object.keys(usedAndUnusedData).length) {
         // login with the new address (next address)
         // change to next address
-        Object.keys(usedAndUnusedData).map((el) => {
-          if (!usedAndUnusedData[el].is_used) {
-            setStoredBitcoinData({
-              address: usedAndUnusedData[el].address,
-            });
-            AsyncStorage.setItem(
-              'bitcoin_async_data',
-              JSON.stringify({
-                address: usedAndUnusedData[el].address,
-              }),
-            );
-          }
+
+        const currentBitcoinIndex =
+          usedAndUnusedData[bitcoinData.address].index;
+        console.log('currentBitcoinIndex', currentBitcoinIndex);
+        const nextAddress = Object.keys(sortKeys(usedAndUnusedData))[
+          currentBitcoinIndex + 1
+        ];
+        console.log('currentBitcoinIndex', currentBitcoinIndex);
+
+        setStoredBitcoinData({
+          address: nextAddress,
         });
+        AsyncStorage.setItem(
+          'bitcoin_async_data',
+          JSON.stringify({
+            address: nextAddress,
+          }),
+        );
       }
     }
   }, [bitcoinData]);
@@ -201,7 +221,9 @@ export default function HomeScreen({navigation}) {
             </TouchableOpacity>
 
             {/* CURRENT BALANCE */}
-            <Text style={styles.balanceText}>Balance {bitcoinBalance}</Text>
+            <Text style={styles.balanceText}>
+              Balance {bitcoinBalance} sats
+            </Text>
 
             {/* CURRENT TESTNET ADDRESS */}
             <Text style={styles.btnAddressText}>
@@ -237,7 +259,7 @@ export default function HomeScreen({navigation}) {
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={() => (
                 <View style={styles.emptyTransactionContainer}>
-                  <Text style={{color: '#fff'}}>No Transactions</Text>
+                  <Text>No Transactions</Text>
                 </View>
               )}
               renderItem={({item}) => {

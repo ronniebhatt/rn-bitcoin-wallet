@@ -15,7 +15,6 @@ const styles = StyleSheet.create({
     height: height * 0.45,
     borderTopEndRadius: 20,
     borderTopStartRadius: 20,
-    backgroundColor: '#265C7E',
   },
   btnContainer: {
     width,
@@ -56,7 +55,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     paddingVertical: 15,
-    color: '#fff',
     textTransform: 'uppercase',
   },
   emptyTransactionContainer: {

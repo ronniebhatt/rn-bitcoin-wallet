@@ -13,7 +13,7 @@ export default function TransactionCard({
         <Text style={styles.transactionIDText}>{transactionID}</Text>
         <Text style={{color: isCredited ? 'green' : 'red', fontSize: 16}}>
           {isCredited ? '+' : '-'}
-          {amount}
+          {amount} sats
         </Text>
       </View>
 
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   },
   transactionIDText: {
     width: '70%',
-    color: '#fff',
+    color: '#000',
   },
   confirmationContainer: {
     borderWidth: 0.5,
