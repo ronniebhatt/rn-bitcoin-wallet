@@ -230,7 +230,7 @@ export default function HomeScreen({navigation}) {
 
           {/* TRANSACTION LIST CONTAINER */}
           <View style={styles.bottomContainer}>
-            <Text style={styles.transactionText}>Unsigned Transactions</Text>
+            <Text style={styles.transactionText}>Transactions</Text>
             <FlatList
               keyExtractor={(item, index) => index.toString()}
               data={utxos}
