@@ -28,7 +28,7 @@ export default function TransactionCard({
               {confirmations >= 1 ? 'CONFIRMED' : 'UNCONFIRMED'}
             </Text>
           </View>
-          <Text>{moment.unix(date).format('LL')}</Text>
+          <Text>{moment.unix(date).format('LLL')}</Text>
         </View>
       </View>
       <Text style={{color: isCredited ? 'green' : 'red', fontSize: 16}}>
