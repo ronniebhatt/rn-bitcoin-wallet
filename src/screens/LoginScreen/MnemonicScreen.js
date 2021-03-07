@@ -350,7 +350,7 @@ export default function MnemonicScreen({route}) {
 
         setChangeAddress(nextAddress);
 
-        AsyncStorage.setItem('change_address', JSON.stringify(nextAddress));
+        AsyncStorage.setItem('change_address', nextAddress);
 
         setChangeAddressComplete(true);
         console.log('next address', nextAddress.toString());

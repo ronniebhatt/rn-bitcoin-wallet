@@ -36,6 +36,15 @@ export default function App() {
   const getAsyncBitcoinData = async () => {
     setLoading(true);
     try {
+      const values = await AsyncStorage.multiGet([
+        'bitcoin_async_data',
+        'usedUnusedAddress',
+        'usedUnusedChangeAddress',
+        'mnemonic_root',
+        'change_address',
+      ]);
+      console.log('multi get', values);
+
       // get bitcoin address from async
       const data = await AsyncStorage.getItem('bitcoin_async_data');
       const parsedAddress = JSON.parse(data);

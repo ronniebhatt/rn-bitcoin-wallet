@@ -148,7 +148,7 @@ export default function SendScreen() {
           console.log('currentBitcoinIndex', currentBitcoinIndex);
 
           setChangeAddress(nextAddress);
-          AsyncStorage.setItem('change_address', JSON.stringify(nextAddress));
+          AsyncStorage.setItem('change_address', nextAddress);
         }
       }
       if (!success) {
