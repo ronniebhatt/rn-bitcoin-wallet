@@ -19,6 +19,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import generateUtxos from '../../Helper/generateUtxos';
 import {FlatList} from 'react-native-gesture-handler';
+import generateTransaction from '../../Helper/generateTransaction';
+import moment from 'moment';
 
 export default function HomeScreen({navigation}) {
   const [bitcoinData, setBitcoinData] = useState(null);
@@ -37,11 +39,20 @@ export default function HomeScreen({navigation}) {
     regularAddressUtxo,
     changeAddressUtxo,
     utxos,
+    allTransactions,
+    setAllTransactions,
+    regularAddressTransaction,
+    setRegularAddressTransaction,
+    changeAddressTransaction,
+    setChangeAddressTransaction,
   } = useContext(Contexts);
   const [refreshing, setRefreshing] = useState(false);
   const utxoArray = [];
   const changeUtxoArray = [];
+  const regularTransactionArray = [];
+  const changeTransactionArray = [];
   let balance = 0;
+  let senderAddress = {};
 
   // handle pull to refresh
   const onRefresh = async () => {
@@ -49,6 +60,7 @@ export default function HomeScreen({navigation}) {
       setRefreshing(true);
       getBitcoinData(storedBitcoinData.address);
       getAllUtoxos();
+      getAllTransactions();
       setRefreshing(false);
     }
   };
@@ -90,6 +102,7 @@ export default function HomeScreen({navigation}) {
 
   useEffect(() => {
     getAllUtoxos();
+    getAllTransactions();
     console.log('usedAndUnusedData', usedAndUnusedData);
   }, [usedAndUnusedData, usedAndUnusedChangeData]);
 
@@ -173,17 +186,55 @@ export default function HomeScreen({navigation}) {
       changeUtxoArray,
     );
   };
+  const getAllTransactions = async () => {
+    await generateTransaction(
+      usedAndUnusedData,
+      setRegularAddressTransaction,
+      regularTransactionArray,
+    );
+    await generateTransaction(
+      usedAndUnusedChangeData,
+      setChangeAddressTransaction,
+      changeTransactionArray,
+    );
+  };
 
   useEffect(() => {
     if (regularAddressUtxo && changeAddressUtxo) {
       const array = regularAddressUtxo.concat(changeAddressUtxo);
       array.map((el) => {
-        balance += el.value;
+        if (el.status.confirmed) {
+          balance += el.value;
+        }
       });
       setBitcoinBalance(balance);
       setUtxos(regularAddressUtxo.concat(changeAddressUtxo));
     }
   }, [regularAddressUtxo, changeAddressUtxo]);
+
+  useEffect(() => {
+    if (regularAddressTransaction || changeAddressTransaction) {
+      const concatedArray = regularAddressTransaction.concat(
+        changeAddressTransaction,
+      );
+      const unique = [];
+
+      concatedArray.map((x) =>
+        unique.filter((a) => a.txid == x.txid).length > 0
+          ? null
+          : unique.push(x),
+      );
+
+      const newUnique = unique.sort(function (left, right) {
+        return moment.unix(right.time).diff(moment.unix(left.time));
+      });
+      setAllTransactions(newUnique);
+    }
+  }, [regularAddressTransaction, changeAddressTransaction]);
+
+  useEffect(() => {
+    console.log('---allTransactions--', allTransactions);
+  }, [allTransactions]);
 
   return (
     <>
@@ -255,7 +306,7 @@ export default function HomeScreen({navigation}) {
             <Text style={styles.transactionText}>Transactions</Text>
             <FlatList
               keyExtractor={(item, index) => index.toString()}
-              data={utxos}
+              data={allTransactions}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={() => (
                 <View style={styles.emptyTransactionContainer}>
@@ -263,15 +314,104 @@ export default function HomeScreen({navigation}) {
                 </View>
               )}
               renderItem={({item}) => {
+                const debitedArray = [];
+                const creditedArray = [];
+
+                // setting debited transaction to debitedArray
+                item.inputs.map((input) => {
+                  if (
+                    Object.keys(sortKeys(usedAndUnusedData)).some((i) =>
+                      input.addresses.includes(i),
+                    )
+                  ) {
+                    debitedArray.push(input);
+                  }
+                  if (
+                    Object.keys(sortKeys(usedAndUnusedChangeData)).some((i) =>
+                      input.addresses.includes(i),
+                    )
+                  ) {
+                    debitedArray.push(input);
+                  }
+                });
+
+                // setting credited transaction to creditedArray
+                item.outputs.map((output) => {
+                  if (
+                    Object.keys(sortKeys(usedAndUnusedData)).some((i) =>
+                      output.addresses.includes(i),
+                    )
+                  ) {
+                    creditedArray.push(output);
+                  }
+                  if (
+                    Object.keys(sortKeys(usedAndUnusedChangeData)).some((i) =>
+                      output.addresses.includes(i),
+                    )
+                  ) {
+                    creditedArray.push(output);
+                  }
+                });
+
+                // setting sender transaction to creditedArray
+                item.outputs.map((output) => {
+                  if (!output.addresses.includes(storedBitcoinData.address)) {
+                    senderAddress[item.hash] = output;
+                  }
+                });
+
                 return (
                   <>
                     {/* rendering credited transaction */}
-                    <TransactionCard
-                      transactionID={item.txid}
-                      amount={item.value}
-                      isCredited={true}
-                      confirmed={item.status.confirmed}
-                    />
+                    {creditedArray.map((credit, index) => {
+                      return (
+                        <TransactionCard
+                          key={index}
+                          transactionID={item.hash}
+                          amount={credit.value_int}
+                          isCredited={true}
+                          confirmations={item.confirmations}
+                          date={item.time}
+                        />
+                      );
+                    })}
+                    {/* rendering debited transaction */}
+                    {debitedArray.map((debit, index) => {
+                      let finalValue = 0;
+                      item.outputs.map((output) => {
+                        console.log('output', output);
+                        console.log('debit', debit);
+                        if (
+                          Object.keys(sortKeys(usedAndUnusedData)).some((i) =>
+                            output.addresses.includes(i),
+                          )
+                        ) {
+                          finalValue = debit.value_int - output.value_int;
+                        } else {
+                          finalValue = debit.value_int;
+                        }
+                        if (
+                          Object.keys(
+                            sortKeys(usedAndUnusedChangeData),
+                          ).some((i) => output.addresses.includes(i))
+                        ) {
+                          finalValue = debit.value_int - output.value_int;
+                        } else {
+                          finalValue = debit.value_int;
+                        }
+                      });
+
+                      return (
+                        <TransactionCard
+                          key={index}
+                          transactionID={item.hash}
+                          amount={finalValue}
+                          isCredited={false}
+                          confirmations={item.confirmations}
+                          date={item.time}
+                        />
+                      );
+                    })}
                   </>
                 );
               }}

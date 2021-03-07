@@ -13,8 +13,6 @@ const styles = StyleSheet.create({
   },
   bottomContainer: {
     height: height * 0.45,
-    borderTopEndRadius: 20,
-    borderTopStartRadius: 20,
   },
   btnContainer: {
     width,

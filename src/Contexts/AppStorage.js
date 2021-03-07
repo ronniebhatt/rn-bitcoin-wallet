@@ -12,8 +12,13 @@ const AppStorage = ({children}) => {
   const [utxos, setUtxos] = useState([]);
   const [regularAddressUtxo, setRegularAddressUtxo] = useState([]);
   const [changeAddressUtxo, setChangeAddressUtxo] = useState([]);
+  const [regularAddressTransaction, setRegularAddressTransaction] = useState(
+    [],
+  );
+  const [changeAddressTransaction, setChangeAddressTransaction] = useState([]);
   const [mnemonicRoot, setMnemonicRoot] = useState(null);
   const [changeAddress, setChangeAddress] = useState('');
+  const [allTransactions, setAllTransactions] = useState([]);
 
   const handleGlobalSpinner = (data) => {
     setGlobalSpinner(data);
@@ -44,6 +49,12 @@ const AppStorage = ({children}) => {
     setRegularAddressUtxo,
     changeAddressUtxo,
     setChangeAddressUtxo,
+    allTransactions,
+    setAllTransactions,
+    regularAddressTransaction,
+    setRegularAddressTransaction,
+    changeAddressTransaction,
+    setChangeAddressTransaction,
   };
 
   return (

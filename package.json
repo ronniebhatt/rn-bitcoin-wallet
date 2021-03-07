@@ -22,6 +22,7 @@
     "buffer": "^6.0.3",
     "coinselect": "^3.1.12",
     "events": "^1.1.1",
+    "moment": "^2.29.1",
     "process": "^0.11.10",
     "react": "16.13.1",
     "react-native": "0.63.4",
