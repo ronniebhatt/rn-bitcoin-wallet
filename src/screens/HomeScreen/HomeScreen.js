@@ -38,7 +38,6 @@ export default function HomeScreen({navigation}) {
     setChangeAddressUtxo,
     regularAddressUtxo,
     changeAddressUtxo,
-    utxos,
     allTransactions,
     setAllTransactions,
     regularAddressTransaction,
@@ -52,8 +51,8 @@ export default function HomeScreen({navigation}) {
   const regularTransactionArray = [];
   const changeTransactionArray = [];
   let balance = 0;
-  let senderAddress = {};
-
+  let unConfirmedBalance = 0;
+  const [unconfirmedBalance, setUnconfirmedBalance] = useState(0);
   // handle pull to refresh
   const onRefresh = async () => {
     if (storedBitcoinData) {
@@ -206,6 +205,11 @@ export default function HomeScreen({navigation}) {
         if (el.status.confirmed) {
           balance += el.value;
         }
+        if (!el.status.confirmed) {
+          console.log('unconfirmed', el.value);
+          unConfirmedBalance += el.value;
+          setUnconfirmedBalance(unConfirmedBalance);
+        }
       });
       setBitcoinBalance(balance);
       setUtxos(regularAddressUtxo.concat(changeAddressUtxo));
@@ -220,7 +224,7 @@ export default function HomeScreen({navigation}) {
       const unique = [];
 
       concatedArray.map((x) =>
-        unique.filter((a) => a.txid == x.txid).length > 0
+        unique.filter((a) => a.txid === x.txid).length > 0
           ? null
           : unique.push(x),
       );
@@ -274,6 +278,11 @@ export default function HomeScreen({navigation}) {
             {/* CURRENT BALANCE */}
             <Text style={styles.balanceText}>
               Balance {bitcoinBalance} sats
+            </Text>
+
+            <Text style={{alignSelf: 'center', marginVertical: 10}}>
+              {unconfirmedBalance !== 0 &&
+                `Unconfirmed Balance : ${unconfirmedBalance} sats`}
             </Text>
 
             {/* CURRENT TESTNET ADDRESS */}
@@ -353,13 +362,6 @@ export default function HomeScreen({navigation}) {
                   }
                 });
 
-                // setting sender transaction to creditedArray
-                item.outputs.map((output) => {
-                  if (!output.addresses.includes(storedBitcoinData.address)) {
-                    senderAddress[item.hash] = output;
-                  }
-                });
-
                 return (
                   <>
                     {/* rendering credited transaction */}
@@ -379,8 +381,6 @@ export default function HomeScreen({navigation}) {
                     {debitedArray.map((debit, index) => {
                       let finalValue = 0;
                       item.outputs.map((output) => {
-                        console.log('output', output);
-                        console.log('debit', debit);
                         if (
                           Object.keys(sortKeys(usedAndUnusedData)).some((i) =>
                             output.addresses.includes(i),
