@@ -21,9 +21,12 @@ import generateUtxos from '../../Helper/generateUtxos';
 import {FlatList} from 'react-native-gesture-handler';
 import generateTransaction from '../../Helper/generateTransaction';
 import moment from 'moment';
+import sortTransaction from '../../Helper/sortTransaction';
 
 export default function HomeScreen({navigation}) {
   const [bitcoinData, setBitcoinData] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [unconfirmedBalance, setUnconfirmedBalance] = useState(0);
   const {
     storedBitcoinData,
     setStoredBitcoinData,
@@ -45,20 +48,20 @@ export default function HomeScreen({navigation}) {
     changeAddressTransaction,
     setChangeAddressTransaction,
   } = useContext(Contexts);
-  const [refreshing, setRefreshing] = useState(false);
+
   const utxoArray = [];
   const changeUtxoArray = [];
   const regularTransactionArray = [];
   const changeTransactionArray = [];
   let balance = 0;
   let unConfirmedBalance = 0;
-  const [unconfirmedBalance, setUnconfirmedBalance] = useState(0);
+
   // handle pull to refresh
   const onRefresh = async () => {
     if (storedBitcoinData) {
       setRefreshing(true);
       getBitcoinData(storedBitcoinData.address);
-      getAllUtoxos();
+      getAllUtxos();
       getAllTransactions();
       setRefreshing(false);
     }
@@ -69,14 +72,13 @@ export default function HomeScreen({navigation}) {
     try {
       const data = await getBitcoinDetails(address);
       setBitcoinData(data.address);
-      console.log('bitcoin', data.address);
       return data.address;
     } catch (error) {
       console.log(error);
     }
   };
 
-  // initial load
+  // -----------initial load----------
   useEffect(() => {
     if (storedBitcoinData) {
       getBitcoinData(storedBitcoinData.address);
@@ -99,32 +101,28 @@ export default function HomeScreen({navigation}) {
     getAsyncBitcoinData();
   }, []);
 
+  // -----------initial load----------
+
+  // --------- get all utxos and all address transactions
+
   useEffect(() => {
-    getAllUtoxos();
+    getAllUtxos();
     getAllTransactions();
     console.log('usedAndUnusedData', usedAndUnusedData);
   }, [usedAndUnusedData, usedAndUnusedChangeData]);
 
+  // --------- get all utxos and all address transactions
+
+  // ---- handle logout----
   const handleLogout = async () => {
     setBitcoinBalance(0);
     setUtxos([]);
     await AsyncStorage.clear();
     setIsLoggedIn(false);
   };
-  const sortKeys = (obj) => {
-    return Object.assign(
-      ...Object.entries(obj)
-        .sort(function (a, b) {
-          return obj[a[0]].index - obj[b[0]].index;
-        })
-        .map(([key, value]) => {
-          return {
-            [key]: value,
-          };
-        }),
-    );
-  };
+  // ---- handle logout----
 
+  // ---- handle change address if address is used----
   useEffect(() => {
     if (
       bitcoinData &&
@@ -158,12 +156,9 @@ export default function HomeScreen({navigation}) {
 
         const currentBitcoinIndex =
           usedAndUnusedData[bitcoinData.address].index;
-        console.log('currentBitcoinIndex', currentBitcoinIndex);
-        const nextAddress = Object.keys(sortKeys(usedAndUnusedData))[
+        const nextAddress = Object.keys(sortTransaction(usedAndUnusedData))[
           currentBitcoinIndex + 1
         ];
-        console.log('currentBitcoinIndex', currentBitcoinIndex);
-
         setStoredBitcoinData({
           address: nextAddress,
         });
@@ -177,7 +172,8 @@ export default function HomeScreen({navigation}) {
     }
   }, [bitcoinData]);
 
-  const getAllUtoxos = async () => {
+  // ------- get utxos function ---------
+  const getAllUtxos = async () => {
     await generateUtxos(usedAndUnusedData, setRegularAddressUtxo, utxoArray);
     await generateUtxos(
       usedAndUnusedChangeData,
@@ -185,6 +181,8 @@ export default function HomeScreen({navigation}) {
       changeUtxoArray,
     );
   };
+
+  // ------- get transaction function ---------
   const getAllTransactions = async () => {
     await generateTransaction(
       usedAndUnusedData,
@@ -198,6 +196,7 @@ export default function HomeScreen({navigation}) {
     );
   };
 
+  // ---- get confirmed and unconfirmed balance
   useEffect(() => {
     if (regularAddressUtxo && changeAddressUtxo) {
       const array = regularAddressUtxo.concat(changeAddressUtxo);
@@ -208,14 +207,15 @@ export default function HomeScreen({navigation}) {
         if (!el.status.confirmed) {
           console.log('unconfirmed', el.value);
           unConfirmedBalance += el.value;
-          setUnconfirmedBalance(unConfirmedBalance);
         }
       });
+      setUnconfirmedBalance(unConfirmedBalance);
       setBitcoinBalance(balance);
       setUtxos(regularAddressUtxo.concat(changeAddressUtxo));
     }
   }, [regularAddressUtxo, changeAddressUtxo]);
 
+  // ---- sort transaction lists -----
   useEffect(() => {
     if (regularAddressTransaction || changeAddressTransaction) {
       const concatedArray = regularAddressTransaction.concat(
@@ -229,16 +229,22 @@ export default function HomeScreen({navigation}) {
           : unique.push(x),
       );
 
+      // temporary adding current time
+      unique.forEach(function (el) {
+        if (!el.time) {
+          el.time = Date.now();
+        }
+      });
+
       const newUnique = unique.sort(function (left, right) {
         return moment.unix(right.time).diff(moment.unix(left.time));
       });
+
+      console.log('newUnique', newUnique);
+
       setAllTransactions(newUnique);
     }
   }, [regularAddressTransaction, changeAddressTransaction]);
-
-  useEffect(() => {
-    console.log('---allTransactions--', allTransactions);
-  }, [allTransactions]);
 
   return (
     <>
@@ -280,10 +286,11 @@ export default function HomeScreen({navigation}) {
               Balance {bitcoinBalance} sats
             </Text>
 
-            <Text style={{alignSelf: 'center', marginVertical: 10}}>
-              {unconfirmedBalance !== 0 &&
-                `Unconfirmed Balance : ${unconfirmedBalance} sats`}
-            </Text>
+            {unconfirmedBalance !== 0 && (
+              <Text style={{alignSelf: 'center', marginVertical: 10}}>
+                {`Unconfirmed Balance : ${unconfirmedBalance} sats`}
+              </Text>
+            )}
 
             {/* CURRENT TESTNET ADDRESS */}
             <Text style={styles.btnAddressText}>
@@ -291,7 +298,7 @@ export default function HomeScreen({navigation}) {
             </Text>
 
             <View style={styles.btnContainer}>
-              <View style={{marginVertical: 20}}>
+              <View style={{marginVertical: 15}}>
                 <CustomButton
                   text="SEND"
                   handleBtnClick={() => navigation.navigate('SendScreen')}
@@ -329,16 +336,16 @@ export default function HomeScreen({navigation}) {
                 // setting debited transaction to debitedArray
                 item.inputs.map((input) => {
                   if (
-                    Object.keys(sortKeys(usedAndUnusedData)).some((i) =>
+                    Object.keys(sortTransaction(usedAndUnusedData)).some((i) =>
                       input.addresses.includes(i),
                     )
                   ) {
                     debitedArray.push(input);
                   }
                   if (
-                    Object.keys(sortKeys(usedAndUnusedChangeData)).some((i) =>
-                      input.addresses.includes(i),
-                    )
+                    Object.keys(
+                      sortTransaction(usedAndUnusedChangeData),
+                    ).some((i) => input.addresses.includes(i))
                   ) {
                     debitedArray.push(input);
                   }
@@ -347,16 +354,16 @@ export default function HomeScreen({navigation}) {
                 // setting credited transaction to creditedArray
                 item.outputs.map((output) => {
                   if (
-                    Object.keys(sortKeys(usedAndUnusedData)).some((i) =>
+                    Object.keys(sortTransaction(usedAndUnusedData)).some((i) =>
                       output.addresses.includes(i),
                     )
                   ) {
                     creditedArray.push(output);
                   }
                   if (
-                    Object.keys(sortKeys(usedAndUnusedChangeData)).some((i) =>
-                      output.addresses.includes(i),
-                    )
+                    Object.keys(
+                      sortTransaction(usedAndUnusedChangeData),
+                    ).some((i) => output.addresses.includes(i))
                   ) {
                     creditedArray.push(output);
                   }
@@ -382,9 +389,9 @@ export default function HomeScreen({navigation}) {
                       let finalValue = 0;
                       item.outputs.map((output) => {
                         if (
-                          Object.keys(sortKeys(usedAndUnusedData)).some((i) =>
-                            output.addresses.includes(i),
-                          )
+                          Object.keys(
+                            sortTransaction(usedAndUnusedData),
+                          ).some((i) => output.addresses.includes(i))
                         ) {
                           finalValue = debit.value_int - output.value_int;
                         } else {
@@ -392,7 +399,7 @@ export default function HomeScreen({navigation}) {
                         }
                         if (
                           Object.keys(
-                            sortKeys(usedAndUnusedChangeData),
+                            sortTransaction(usedAndUnusedChangeData),
                           ).some((i) => output.addresses.includes(i))
                         ) {
                           finalValue = debit.value_int - output.value_int;

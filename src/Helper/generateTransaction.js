@@ -1,6 +1,6 @@
 import moment from 'moment';
 
-const generateTransaction = async (data, setTx, utxoArray) => {
+const generateTransaction = async (data, setTransactions, transactionArray) => {
   Promise.all(
     Object.keys(data).map((address) => {
       return new Promise((resolve) => {
@@ -9,19 +9,17 @@ const generateTransaction = async (data, setTx, utxoArray) => {
         ).then((response) => {
           return new Promise(() => {
             response.json().then((transactions) => {
-              console.log('transactions', transactions.address.transactions);
               if (
                 transactions.address.transactions &&
                 transactions.address.transactions.length !== 0
               ) {
-                // setting total balance
                 transactions.address.transactions.map((transaction) => {
-                  utxoArray.push({
+                  transactionArray.push({
                     ...transaction,
-                    // formatedDate: moment.unix(transaction.time).format('LLL'),
                   });
                 });
               }
+
               resolve();
             });
           });
@@ -29,8 +27,7 @@ const generateTransaction = async (data, setTx, utxoArray) => {
       });
     }),
   ).then(() => {
-    setTx(utxoArray);
-    console.log(utxoArray);
+    setTransactions(transactionArray);
   });
 };
 

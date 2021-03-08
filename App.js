@@ -36,32 +36,34 @@ export default function App() {
   const getAsyncBitcoinData = async () => {
     setLoading(true);
     try {
-      const values = await AsyncStorage.multiGet([
-        'bitcoin_async_data',
-        'usedUnusedAddress',
-        'usedUnusedChangeAddress',
-        'mnemonic_root',
-        'change_address',
-      ]);
-      console.log('multi get', values);
+      // const values = await AsyncStorage.multiGet([
+      //   'bitcoin_async_data',
+      //   'usedUnusedAddress',
+      //   'usedUnusedChangeAddress',
+      //   'mnemonic_root',
+      //   'change_address',
+      // ]);
+      // console.log('multi get', values);
 
       // get bitcoin address from async
       const data = await AsyncStorage.getItem('bitcoin_async_data');
       const parsedAddress = JSON.parse(data);
+
       // get usedUnusedAddress object from async
       const usedUnused = await AsyncStorage.getItem('usedUnusedAddress');
-      setUsedAndUnusedData(JSON.parse(usedUnused));
+      const parsedUsedAndUnused = JSON.parse(usedUnused);
+      setUsedAndUnusedData(parsedUsedAndUnused);
 
       // get used unused change object from async
       const usedUnusedChange = await AsyncStorage.getItem(
         'usedUnusedChangeAddress',
       );
-      setUsedAndUnusedChangeData(JSON.parse(usedUnusedChange));
+      const parsedUsedAndUnusedChanged = JSON.parse(usedUnusedChange);
+
+      setUsedAndUnusedChangeData(parsedUsedAndUnusedChanged);
       // get changeAddress from from async
       const changedAddressAsync = await AsyncStorage.getItem('change_address');
-      const parsedChangedAddressAsync = JSON.parse(changedAddressAsync);
-
-      setChangeAddress(parsedChangedAddressAsync);
+      setChangeAddress(changedAddressAsync);
       // set mnemonic root
       const mnemonicRoot = await AsyncStorage.getItem('mnemonic_root');
       setMnemonicRoot(mnemonicRoot);

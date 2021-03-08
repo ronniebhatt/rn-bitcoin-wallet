@@ -6,6 +6,7 @@ import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import broadcastTransaction from '../../api/bitcoin/broadcastTransaction';
 import CustomButton from '../../Components/CustomButton/CustomButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import sortTransaction from '../../Helper/sortTransaction';
 const bitcoin = require('bitcoinjs-lib');
 const coinSelect = require('coinselect');
 const testnet = bitcoin.networks.testnet;
@@ -25,8 +26,8 @@ export default function SendScreen() {
   } = useContext(Contexts);
 
   useEffect(() => {
-    console.log('changeAddress', changeAddress);
-  }, [changeAddress]);
+    console.log('changeAddress', utxos);
+  }, [utxos]);
 
   // check if receiver testnet address is valid or not
   const checkTestAddress = async (testnetAddress) => {
@@ -45,35 +46,23 @@ export default function SendScreen() {
     }
   };
 
-  const sortKeys = (obj) => {
-    return Object.assign(
-      ...Object.entries(obj)
-        .sort(function (a, b) {
-          return obj[a[0]].index - obj[b[0]].index;
-        })
-        .map(([key, value]) => {
-          return {
-            [key]: value,
-          };
-        }),
-    );
-  };
-
   // get unsigned transaction
   const getUnsignedTransaction = async (targets, feePerByte = 2) => {
     const formattedUTXO = [];
     utxos.forEach((utxo) => {
-      formattedUTXO.push({
-        txId: utxo.txid,
-        vout: utxo.vout,
-        value: utxo.value,
-        confirmed: utxo.status.confirmed,
-        derivePath: utxo.derivePath,
-      });
+      if (utxo.status.confirmed) {
+        formattedUTXO.push({
+          txId: utxo.txid,
+          vout: utxo.vout,
+          value: utxo.value,
+          confirmed: utxo.status.confirmed,
+          derivePath: utxo.derivePath,
+        });
+      }
     });
-
+    console.log('formattedUTXO', formattedUTXO);
     let {inputs, outputs, fee} = coinSelect(formattedUTXO, targets, feePerByte);
-
+    console.log('fees', fee);
     if (!inputs || !outputs) {
       return {
         success: false,
@@ -142,9 +131,9 @@ export default function SendScreen() {
 
           const currentBitcoinIndex = newUsedAndUnusedData[changeAddress].index;
           console.log('currentBitcoinIndex', currentBitcoinIndex);
-          const nextAddress = Object.keys(sortKeys(newUsedAndUnusedData))[
-            currentBitcoinIndex + 1
-          ];
+          const nextAddress = Object.keys(
+            sortTransaction(newUsedAndUnusedData),
+          )[currentBitcoinIndex + 1];
           console.log('currentBitcoinIndex', currentBitcoinIndex);
 
           setChangeAddress(nextAddress);

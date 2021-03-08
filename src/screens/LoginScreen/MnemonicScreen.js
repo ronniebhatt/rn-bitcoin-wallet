@@ -15,6 +15,7 @@ import CustomButton from '../../Components/CustomButton/CustomButton';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import generateAddress from '../../Helper/generateAddress';
+import sortTransaction from '../../Helper/sortTransaction';
 const bip39 = require('bip39');
 const bitcoin = require('bitcoinjs-lib');
 
@@ -39,20 +40,6 @@ export default function MnemonicScreen({route}) {
   const [mnemonic, setMnemonic] = useState('');
   const [regularAddressComplete, setRegularAddressComplete] = useState(false);
   const [changeAddressComplete, setChangeAddressComplete] = useState(false);
-
-  const sortKeys = (obj) => {
-    return Object.assign(
-      ...Object.entries(obj)
-        .sort(function (a, b) {
-          return obj[a[0]].index - obj[b[0]].index;
-        })
-        .map(([key, value]) => {
-          return {
-            [key]: value,
-          };
-        }),
-    );
-  };
 
   useEffect(() => {
     if (regularAddressComplete && changeAddressComplete) {
@@ -200,15 +187,16 @@ export default function MnemonicScreen({route}) {
 
         for (
           let i = 0;
-          i < Object.keys(sortKeys(processedUsedAndUnusedAddress)).length;
+          i <
+          Object.keys(sortTransaction(processedUsedAndUnusedAddress)).length;
           i++
         ) {
           if (
             processedUsedAndUnusedAddress[
-              Object.keys(sortKeys(processedUsedAndUnusedAddress))[i]
+              Object.keys(sortTransaction(processedUsedAndUnusedAddress))[i]
             ].index === i &&
             !processedUsedAndUnusedAddress[
-              Object.keys(sortKeys(processedUsedAndUnusedAddress))[i]
+              Object.keys(sortTransaction(processedUsedAndUnusedAddress))[i]
             ].is_used
           ) {
             currentUnusedAddressIndex = i;
@@ -217,7 +205,7 @@ export default function MnemonicScreen({route}) {
         }
 
         const nextAddress = Object.keys(
-          sortKeys(processedUsedAndUnusedAddress),
+          sortTransaction(processedUsedAndUnusedAddress),
         )[currentUnusedAddressIndex];
         setStoredBitcoinData({
           address: nextAddress,
@@ -328,15 +316,16 @@ export default function MnemonicScreen({route}) {
 
         for (
           let i = 0;
-          i < Object.keys(sortKeys(processedUsedAndUnusedAddress)).length;
+          i <
+          Object.keys(sortTransaction(processedUsedAndUnusedAddress)).length;
           i++
         ) {
           if (
             processedUsedAndUnusedAddress[
-              Object.keys(sortKeys(processedUsedAndUnusedAddress))[i]
+              Object.keys(sortTransaction(processedUsedAndUnusedAddress))[i]
             ].index === i &&
             !processedUsedAndUnusedAddress[
-              Object.keys(sortKeys(processedUsedAndUnusedAddress))[i]
+              Object.keys(sortTransaction(processedUsedAndUnusedAddress))[i]
             ].is_used
           ) {
             currentUnusedAddressIndex = i;
@@ -345,7 +334,7 @@ export default function MnemonicScreen({route}) {
         }
 
         const nextAddress = Object.keys(
-          sortKeys(processedUsedAndUnusedAddress),
+          sortTransaction(processedUsedAndUnusedAddress),
         )[currentUnusedAddressIndex];
 
         setChangeAddress(nextAddress);
