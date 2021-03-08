@@ -1,4 +1,4 @@
-import React, {useState, useContext, useEffect} from 'react';
+import React, {useState, useContext} from 'react';
 import {View, SafeAreaView, TextInput, Image, Alert} from 'react-native';
 import styles from './styles';
 import Contexts from '../../Contexts/Contexts';
@@ -24,10 +24,6 @@ export default function SendScreen() {
     setUsedAndUnusedChangeData,
     setChangeAddress,
   } = useContext(Contexts);
-
-  useEffect(() => {
-    console.log('changeAddress', utxos);
-  }, [utxos]);
 
   // check if receiver testnet address is valid or not
   const checkTestAddress = async (testnetAddress) => {
@@ -60,9 +56,7 @@ export default function SendScreen() {
         });
       }
     });
-    console.log('formattedUTXO', formattedUTXO);
     let {inputs, outputs, fee} = coinSelect(formattedUTXO, targets, feePerByte);
-    console.log('fees', fee);
     if (!inputs || !outputs) {
       return {
         success: false,
@@ -130,11 +124,9 @@ export default function SendScreen() {
           // change to next address
 
           const currentBitcoinIndex = newUsedAndUnusedData[changeAddress].index;
-          console.log('currentBitcoinIndex', currentBitcoinIndex);
           const nextAddress = Object.keys(
             sortTransaction(newUsedAndUnusedData),
           )[currentBitcoinIndex + 1];
-          console.log('currentBitcoinIndex', currentBitcoinIndex);
 
           setChangeAddress(nextAddress);
           AsyncStorage.setItem('change_address', nextAddress);

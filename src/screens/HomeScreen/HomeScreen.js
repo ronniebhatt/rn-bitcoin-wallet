@@ -108,7 +108,6 @@ export default function HomeScreen({navigation}) {
   useEffect(() => {
     getAllUtxos();
     getAllTransactions();
-    console.log('usedAndUnusedData', usedAndUnusedData);
   }, [usedAndUnusedData, usedAndUnusedChangeData]);
 
   // --------- get all utxos and all address transactions
@@ -205,7 +204,6 @@ export default function HomeScreen({navigation}) {
           balance += el.value;
         }
         if (!el.status.confirmed) {
-          console.log('unconfirmed', el.value);
           unConfirmedBalance += el.value;
         }
       });
@@ -239,8 +237,6 @@ export default function HomeScreen({navigation}) {
       const newUnique = unique.sort(function (left, right) {
         return moment.unix(right.time).diff(moment.unix(left.time));
       });
-
-      console.log('newUnique', newUnique);
 
       setAllTransactions(newUnique);
     }
