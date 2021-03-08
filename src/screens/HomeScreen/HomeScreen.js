@@ -198,13 +198,13 @@ export default function HomeScreen({navigation}) {
   // ---- get confirmed and unconfirmed balance
   useEffect(() => {
     if (regularAddressUtxo && changeAddressUtxo) {
-      const array = regularAddressUtxo.concat(changeAddressUtxo);
-      array.map((el) => {
-        if (el.status.confirmed) {
-          balance += el.value;
+      const unsignedTransaction = regularAddressUtxo.concat(changeAddressUtxo);
+      unsignedTransaction.map((transaction) => {
+        if (transaction.status.confirmed) {
+          balance += transaction.value;
         }
-        if (!el.status.confirmed) {
-          unConfirmedBalance += el.value;
+        if (!transaction.status.confirmed) {
+          unConfirmedBalance += transaction.value;
         }
       });
       setUnconfirmedBalance(unConfirmedBalance);
@@ -234,6 +234,7 @@ export default function HomeScreen({navigation}) {
         }
       });
 
+      // sorting by time
       const newUnique = unique.sort(function (left, right) {
         return moment.unix(right.time).diff(moment.unix(left.time));
       });
