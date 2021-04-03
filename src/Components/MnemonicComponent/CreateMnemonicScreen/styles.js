@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
   btnContainer: {
     width,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 40,
   },
   textInputContainer: {
     flexDirection: 'row',
@@ -51,6 +51,24 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+
+  backupWordContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 20,
+  },
+  backupWordIconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: 80,
+  },
+
+  mnemonicWordContainer: {
+    width: 100,
+    marginHorizontal: 5,
+    paddingVertical: 5,
+    flexDirection: 'row',
   },
 });
 

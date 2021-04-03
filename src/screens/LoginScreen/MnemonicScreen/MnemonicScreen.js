@@ -10,7 +10,7 @@ import ImportMnemonicScreen from '../../../Components/MnemonicComponent/ImportMn
 const bip39 = require('bip39');
 const bitcoin = require('bitcoinjs-lib');
 
-export default function MnemonicScreen({route}) {
+export default function MnemonicScreen({route, navigation}) {
   const {type} = route.params;
   const ref = useRef({
     currentNo: 10,
@@ -349,10 +349,24 @@ export default function MnemonicScreen({route}) {
     setMnemonic(text);
   };
 
+  useEffect(() => {
+    if (type === 'create_wallet') {
+      generateMnemonicPhrase();
+      return;
+    }
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
-      {type === 'create_wallet' && <CreateMnemonicScreen />}
-      {type !== 'create_wallet' && <ImportMnemonicScreen />}
+      {type === 'create_wallet' && (
+        <CreateMnemonicScreen
+          mnemonic_word={mnemonic}
+          handleBackButton={() => navigation.goBack()}
+        />
+      )}
+      {type !== 'create_wallet' && (
+        <ImportMnemonicScreen handleBackButton={() => navigation.goBack()} />
+      )}
     </SafeAreaView>
   );
 }

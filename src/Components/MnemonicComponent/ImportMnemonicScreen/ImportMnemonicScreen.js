@@ -4,12 +4,18 @@ import CustomButton from '../../CustomButton/CustomButton';
 import styles from './styles';
 import Feather from 'react-native-vector-icons/Feather';
 
-export default function ImportMnemonicScreen({setMnemonic, mnemonic}) {
+export default function ImportMnemonicScreen({
+  setMnemonic,
+  mnemonic,
+  handleBackButton,
+}) {
   return (
     <>
       <View style={styles.textInputOuterContainer}>
         <View style={styles.headerContainer}>
-          <Feather name="chevron-left" size={30} color="#2a3b52" />
+          <TouchableOpacity onPress={handleBackButton}>
+            <Feather name="chevron-left" size={30} color="#2a3b52" />
+          </TouchableOpacity>
           <Text style={styles.mainText}>Import wallet</Text>
         </View>
         <View style={styles.textInputContainer}>
@@ -25,7 +31,7 @@ export default function ImportMnemonicScreen({setMnemonic, mnemonic}) {
 
       <View style={styles.btnContainer}>
         <CustomButton
-          text="CREATE WALLET"
+          text="PROCEED"
           // handleBtnClick={handleLoginBtn}
         />
       </View>
