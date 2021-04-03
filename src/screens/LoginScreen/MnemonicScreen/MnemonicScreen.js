@@ -1,21 +1,12 @@
 import React, {useContext, useRef, useState, useEffect} from 'react';
-import {
-  View,
-  Text,
-  SafeAreaView,
-  Image,
-  TextInput,
-  Alert,
-  TouchableOpacity,
-} from 'react-native';
-import Contexts from '../../Contexts/Contexts';
+import {SafeAreaView, Alert} from 'react-native';
+import Contexts from '../../../Contexts/Contexts';
 import styles from './styles';
-import {LOGO_URL} from '../../api/bitcoin/constant';
-import CustomButton from '../../Components/CustomButton/CustomButton';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import generateAddress from '../../Helper/generateAddress';
-import sortTransaction from '../../Helper/sortTransaction';
+import generateAddress from '../../../Helper/generateAddress';
+import sortTransaction from '../../../Helper/sortTransaction';
+import CreateMnemonicScreen from '../../../Components/MnemonicComponent/CreateMnemonicScreen/CreateMnemonicScreen';
+import ImportMnemonicScreen from '../../../Components/MnemonicComponent/ImportMnemonicScreen/ImportMnemonicScreen';
 const bip39 = require('bip39');
 const bitcoin = require('bitcoinjs-lib');
 
@@ -360,59 +351,8 @@ export default function MnemonicScreen({route}) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAwareScrollView>
-        {/* TOP LOGO */}
-        <Image
-          style={styles.logo}
-          resizeMode="contain"
-          source={{
-            uri: LOGO_URL,
-          }}
-        />
-
-        <View style={styles.textInputOuterContainer}>
-          <Text style={styles.mainText}>
-            {type === 'create_wallet'
-              ? 'Generate 12 word Mnemonic Phrase'
-              : 'Enter 12 word Mnemonic Phrase'}
-          </Text>
-          <View style={styles.textInputContainer}>
-            <TextInput
-              placeholder="Enter Mnemonic Phrase"
-              style={styles.textInput}
-              multiline
-              value={mnemonic}
-              onChangeText={(text) => setMnemonic(text.trim())}
-            />
-          </View>
-          {type === 'create_wallet' && (
-            <>
-              <View style={{justifyContent: 'center', alignItems: 'center'}}>
-                <TouchableOpacity
-                  style={styles.generateAddressBtn}
-                  onPress={generateMnemonicPhrase}>
-                  <Text style={styles.generateAddressText}>Generate</Text>
-                </TouchableOpacity>
-              </View>
-              <View>
-                <Text style={{opacity: 0.6, paddingVertical: 10}}>
-                  Click on generate button to generate a new 12 word mnemonic
-                </Text>
-                <Text style={{opacity: 0.6}}>
-                  Please write down these words in a secure location
-                </Text>
-              </View>
-            </>
-          )}
-        </View>
-
-        <View style={styles.btnContainer}>
-          <CustomButton
-            text={type === 'create_wallet' ? 'CREATE WALLET' : 'IMPORT'}
-            handleBtnClick={handleLoginBtn}
-          />
-        </View>
-      </KeyboardAwareScrollView>
+      {type === 'create_wallet' && <CreateMnemonicScreen />}
+      {type !== 'create_wallet' && <ImportMnemonicScreen />}
     </SafeAreaView>
   );
 }

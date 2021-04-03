@@ -3,7 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import HomeScreen from './src/screens/HomeScreen/HomeScreen';
 import SendScreen from './src/screens/SendScreen/SendScreen';
-import MnemonicScreen from './src/screens/LoginScreen/MnemonicScreen';
+import MnemonicScreen from './src/screens/LoginScreen/MnemonicScreen/MnemonicScreen';
 import {ActivityIndicator, Text, View, StyleSheet} from 'react-native';
 import Modal from 'react-native-modal';
 import Contexts from './src/Contexts/Contexts';

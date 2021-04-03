@@ -7,31 +7,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  titleText: {
-    fontSize: 25,
-    color: '#2a3b52',
-  },
-  titleContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 30,
-  },
+
   btnContainer: {
     width,
     alignItems: 'center',
-    marginTop: 50,
+    marginTop: 20,
+  },
+  textInputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
 
-  btn: {
-    width: width - 50,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 40,
-    borderRadius: 20,
-    marginHorizontal: 10,
-    backgroundColor: '#fff',
+  textInputOuterContainer: {
+    width: width - 30,
+    alignSelf: 'center',
+    marginTop: 20,
+  },
+  textInput: {
+    width: '100%',
     marginVertical: 20,
+    height: 150,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    fontSize: 18,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -40,13 +38,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    flexDirection: 'row',
-    paddingHorizontal: 20,
+    backgroundColor: '#fff',
   },
-  btnText: {
-    color: '#2a3b52',
-    fontSize: 22,
-    fontWeight: '600',
+  mainText: {
+    textAlign: 'center',
+    fontSize: 18,
+    marginVertical: 20,
+    opacity: 0.8,
+    textTransform: 'uppercase',
   },
 });
 

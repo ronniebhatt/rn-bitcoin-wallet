@@ -21,10 +21,10 @@ export default function CustomButton({
 
 const styles = StyleSheet.create({
   btn: {
-    backgroundColor: '#265C7E',
+    backgroundColor: '#4c8fed',
     width: width - 40,
     paddingVertical: 15,
-    borderRadius: 40,
+    borderRadius: 8,
   },
   btnText: {
     textAlign: 'center',
