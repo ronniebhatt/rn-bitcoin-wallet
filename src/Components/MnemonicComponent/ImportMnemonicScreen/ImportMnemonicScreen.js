@@ -8,6 +8,7 @@ export default function ImportMnemonicScreen({
   setMnemonic,
   mnemonic,
   handleBackButton,
+  handleLoginBtn,
 }) {
   return (
     <>
@@ -30,10 +31,7 @@ export default function ImportMnemonicScreen({
       </View>
 
       <View style={styles.btnContainer}>
-        <CustomButton
-          text="PROCEED"
-          // handleBtnClick={handleLoginBtn}
-        />
+        <CustomButton text="PROCEED" handleBtnClick={handleLoginBtn} />
       </View>
     </>
   );

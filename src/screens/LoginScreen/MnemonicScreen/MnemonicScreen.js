@@ -362,10 +362,16 @@ export default function MnemonicScreen({route, navigation}) {
         <CreateMnemonicScreen
           mnemonic_word={mnemonic}
           handleBackButton={() => navigation.goBack()}
+          handleLoginBtn={handleLoginBtn}
         />
       )}
       {type !== 'create_wallet' && (
-        <ImportMnemonicScreen handleBackButton={() => navigation.goBack()} />
+        <ImportMnemonicScreen
+          handleBackButton={() => navigation.goBack()}
+          handleLoginBtn={handleLoginBtn}
+          mnemonic={mnemonic}
+          setMnemonic={setMnemonic}
+        />
       )}
     </SafeAreaView>
   );
