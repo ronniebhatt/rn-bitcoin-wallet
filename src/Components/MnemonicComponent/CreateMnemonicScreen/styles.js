@@ -70,6 +70,24 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     flexDirection: 'row',
   },
+
+  content: {
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 4,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    bottom: 0,
+    position: 'absolute',
+    height: 500,
+    width,
+  },
+  contentTitle: {
+    fontSize: 20,
+    marginBottom: 40,
+    width: '60%',
+    textAlign: 'center',
+  },
 });
 
 export default styles;
