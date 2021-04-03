@@ -84,6 +84,7 @@ export default function App() {
   }, [isLoggedIn]);
 
   // Loader
+
   const renderGlobalLoader = () => (
     <Modal
       onRequestClose={() => handleGlobalSpinner(false)}
@@ -92,8 +93,22 @@ export default function App() {
       visible={globalSpinner}
       statusBarTranslucent
       style={{marginHorizontal: 0, marginVertical: 0}}>
-      <View style={styles.loaderOuterContainer}>
-        <View style={styles.loaderContainer}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+        }}>
+        <View
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#4272B6',
+            width: 140,
+            height: 110,
+            borderRadius: 10,
+          }}>
           <ActivityIndicator size="large" color="#fff" />
           <Text style={{color: '#fff', fontSize: 18, marginTop: 10}}>
             Loading...
