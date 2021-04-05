@@ -1,27 +1,20 @@
 import React, {useState, useEffect, useContext} from 'react';
-import {
-  View,
-  Text,
-  SafeAreaView,
-  Image,
-  RefreshControl,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
+import {View, Text, SafeAreaView, TouchableOpacity} from 'react-native';
 import getBitcoinDetails from '../../api/bitcoin/getBitcoinDetails';
 import TransactionCard from '../../Components/TransactionCard/TransactionCard';
 import styles from './styles';
 import Contexts from '../../Contexts/Contexts';
 import Spinner from '../../Components/Spinner/Spinner';
 import CustomButton from '../../Components/CustomButton/CustomButton';
-import {LOGO_URL} from '../../api/bitcoin/constant';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import generateUtxos from '../../Helper/generateUtxos';
 import {FlatList} from 'react-native-gesture-handler';
 import generateTransaction from '../../Helper/generateTransaction';
 import moment from 'moment';
 import sortTransaction from '../../Helper/sortTransaction';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Entypo from 'react-native-vector-icons/Entypo';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 export default function HomeScreen({navigation}) {
   const [bitcoinData, setBitcoinData] = useState(null);
@@ -248,82 +241,105 @@ export default function HomeScreen({navigation}) {
       {!bitcoinData && <Spinner />}
       {bitcoinData && (
         <SafeAreaView style={styles.container}>
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            style={styles.topContainer}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }>
-            <View
-              style={{
-                backgroundColor: '#265C7E',
-                paddingVertical: 10,
-              }}>
-              <Text style={{color: '#fff', textAlign: 'center', fontSize: 12}}>
-                Pull to refresh
-              </Text>
-            </View>
-            {/* TOP LOGO */}
-            <Image
-              style={styles.logo}
-              resizeMode="contain"
-              source={{
-                uri: LOGO_URL,
-              }}
-            />
+          {/* header container */}
+          <View style={styles.headerContainer}>
+            <Ionicons name="reorder-three-outline" color="#000" size={40} />
+            <Text style={styles.headerText}>Bitcoin Wallet</Text>
+          </View>
 
-            <TouchableOpacity
-              onPress={handleLogout}
-              style={{position: 'absolute', right: 15, top: 45}}>
-              <AntDesign name="logout" size={30} />
-            </TouchableOpacity>
-
-            {/* CURRENT BALANCE */}
-            <Text style={styles.balanceText}>
-              Balance {bitcoinBalance} sats
-            </Text>
-
+          {/* bitcoin balance card */}
+          <View style={styles.bitcoinBalanceCard}>
+            <Text style={styles.balanceText}>{bitcoinBalance} SATS</Text>
             {unconfirmedBalance !== 0 && (
               <Text style={{alignSelf: 'center', marginVertical: 10}}>
                 {`Unconfirmed Balance : ${unconfirmedBalance} sats`}
               </Text>
             )}
-
-            {/* CURRENT TESTNET ADDRESS */}
-            <Text style={styles.btnAddressText}>
-              {storedBitcoinData.address}
-            </Text>
-
-            <View style={styles.btnContainer}>
-              <View style={{marginVertical: 15}}>
-                <CustomButton
-                  text="SEND"
-                  handleBtnClick={() => navigation.navigate('SendScreen')}
-                />
-              </View>
-              <View style={{marginVertical: 10}}>
-                <CustomButton
-                  text="RECEIVE"
-                  handleBtnClick={() =>
-                    navigation.navigate('ReceiveScreen', {
-                      bitcoinData,
-                    })
-                  }
-                />
-              </View>
+            <View style={styles.bottomTextContainer}>
+              <FontAwesome5 name="bitcoin" size={30} />
+              <Text style={styles.bottomText}>Bitcoin Wallet</Text>
             </View>
-          </ScrollView>
+          </View>
+
+          <View style={styles.btnContainer}>
+            <TouchableOpacity
+              style={{
+                height: 60,
+                width: '50%',
+                backgroundColor: '#fff',
+                borderTopLeftRadius: 10,
+                borderBottomLeftRadius: 10,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: '#000',
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+
+                elevation: 5,
+              }}
+              onPress={() => navigation.navigate('SendScreen')}>
+              <Text>SEND</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                height: 60,
+                width: '50%',
+                backgroundColor: '#fff',
+                borderTopRightRadius: 10,
+                borderBottomRightRadius: 10,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: '#000',
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+
+                elevation: 5,
+                borderLeftWidth: 1,
+                borderColor: 'rgba(0,0,0,0)',
+              }}
+              onPress={() =>
+                navigation.navigate('ReceiveScreen', {
+                  bitcoinData,
+                })
+              }>
+              <Text>RECEIVE</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* TRANSACTION LIST CONTAINER */}
           <View style={styles.bottomContainer}>
             <Text style={styles.transactionText}>Transactions</Text>
+
+            <View style={styles.tabContainer}>
+              <View style={styles.tabs}>
+                <Text style={styles.tabsText}>All</Text>
+              </View>
+              <View style={styles.tabs}>
+                <Text style={styles.tabsText}>Send</Text>
+              </View>
+              <View style={styles.tabs}>
+                <Text style={styles.tabsText}>Received</Text>
+              </View>
+            </View>
+
             <FlatList
               keyExtractor={(item, index) => index.toString()}
               data={allTransactions}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={() => (
                 <View style={styles.emptyTransactionContainer}>
-                  <Text>No Transactions</Text>
+                  <Entypo name="wallet" size={80} color={'rgba(0,0,0,0.45)'} />
+                  <Text style={{color: 'rgba(0,0,0,0.45)', fontSize: 22}}>
+                    No Transactions
+                  </Text>
                 </View>
               )}
               renderItem={({item}) => {
